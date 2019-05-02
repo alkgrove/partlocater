@@ -1,0 +1,117 @@
+.title
+Digi-Key Partlocater 
+.h1
+Introduction
+.plain
+Partlocater queries the distributor, Digi-Key using their API portal and places the technical parameters into a local schematic capture database. For setting up configuration file, database and tokens see installation document.
+.h1
+Main Window
+.h2
+Menu Items
+.plain
+File
+.indent
+    Connect To... -> Opens sub menu list of databases listed in the configuration file. You must connect to a database first before locating a part on Digi-Key. It will authenticate and possibly update a token. Changing databases will automatically disconnect from current database and connect to the selected one.
+.plain
+    Disconnect -> Disconnect from current open database. 
+.plain
+    Search Database -> Opens a search window for exploring and modifying the database.
+.plain
+    Sync Tokens -> If there is more than one database, this copies the most recent token to the other databases
+.plain
+    Export -> Saves the current connected database to a .sql file. This only works for localhost server databases. This requires mysqldump and mysql executables with a mysql_path defined in preferences section of the partlocater.cfg file. 
+.plain
+    Import -> Import from an .sql file into the current connected database. This removes any prior version of that database and replaces it with the imported data. This only works for localhost server databases. This requires mysqldump and mysql executables with a mysql_path defined in preferences section of the partlocater.cfg file.
+
+.plain
+    Quit -> Exits the application
+Help
+    About -> Opens about box
+    System -> Opens system information window. Useful for troubleshooting. 
+    Help -> Opens this window
+.h2
+Part Number
+.plain
+Enter the exact Digi-Key part number into this field to locate the part at Digi-Key.
+.h2
+Locate
+.plain
+Once the exact Digi-Key part number is entered in the Part Number field, clicking Locate goes to Digi-Key and retrieves the parameter data. This data is displayed in the Part Info view as name/value properties. 
+.h2
+Clear
+.plain
+This clears the Part Info, Modify Name/Value and Part Number fields. Any information that was not committed will be lost. 
+.h2
+Commit/Overwrite
+.plain
+The data from Digi-Key that is showing in the Part Info view will be written to the database when the Commit/Overwrite button is clicked. If the Overwrite button is showing (rather than Commit), then that part number is already in the database. Also the Commit button will change to Overwrite, once it is pushed.
+.h2
+Part Info View
+.plain
+This displays the parameter data from a Digi-Key query with the parameter name and paramter value on each line. When a line is selected, Control-C will copy the value of the selected property to the clipboard. 
+When any of the parameter lines are selected, the name and value is copied to the Modify Name/Value view. The parameter value can be modified and can be cut, copy or pasted to and from the clipboard and the property updated. Note that this does not change the database, only the current view. You will need to click the Commit/Overwrite to put the changes here into the database. Three fields: Base Part Number, Footprint Ref and Library Ref have a different background. This is Altium specific. The Library Ref is the name of the schematic symbol for the part and Footprint Ref is the name of the PCB footprint for the part. The optional base part name is the basic canonical name ie SN74LVC1G04DBVR could have a base part number of 74LVC1G04. These are highlighted because they represent fields that should be set before committing to the database. The software tries to guess the best match, but these fields should be checked prior to committing them. 
+.h2
+Modify Name/Value
+.plain
+If you click on a property, it will show up in the modify Name/Value view. It would have been nice to have it show up in the property view but this is based on a very old GUI that did not have the feature built in. Once a selection is made in the part info, the value can be cut, copy or pasted with the clipboard. Once modified, it can be updated to the local view by clicking the update button (or cleared/canceled by the Cancel button. 
+.h1
+Search Window
+.plain
+This is opened by File -> Search Database when a database is connected. The fields in this area are filters to search on. Leaving fields empty ignores the field as a filter. That is, Category of All and all other fields empty will find all parts in the database. 
+.h2
+Category
+.plain
+Category is selected by the menu. You can search all categories (All - default) or narrow the search to one of the specific categories ie Capacitors, Resistors, etc.
+.h2
+Manufacturer
+.plain
+Put the full or part of the manufacuture name in to filter on Manufacture name (case insensitive) ie samsung will find products from Samsung Electro-Mechanics
+.h2
+Manufacture Part Number
+.plain
+Put the full or partial part number in to filter for that part.
+.h2
+Supplier Part Number 1
+.plain
+Find the Digi-Key part number
+.h2
+Description
+.plain
+This is the Digi-Key description containing package, ratings, type, etc. Each of these can be entered in, in any order. For example to find 0.1UF X7R capacitors, you can enter that or X7R 0.1UF and it will find CAP CER 0.1UF 25V X7R 0402, CAP CER 0.1UF 50V X7R 0603. To find all of the 0402 package, enter 0402 in description and All in category. 
+.h2
+Find Button
+.plain
+Using the above filters, searches the database and displaying the Description, Manufacturer, Manufacture Part Number, Distributor Part Number and Category. Enter Key does the same thing as clicking on Find.
+.h2
+Clear Button
+.plain
+Resets all field to defaults and clears the search.
+.h2
+Found Components
+.plain
+This shows each component that met the above filtered results when Find (or Enter) was pushed. It will show columns for Description, Manufacturer, Manufacture Part Number, Distributor Part Number and Database Category. This is the summary line. The small box on the left of each line can be clicked on to expand to show all of the properties for that part or property lines. Clicking on it again will collapse the property lines back to just the summary line. Selecting the summary line will enable the Copy Selected to Part Find and Delete Part from Database buttons. 
+Selecting any of the property lines will bring the selected property down to the Modify Name/Value field. Most values can be editted and updated in the database. On a selected summary line, control-C will copy the Supplier Part Number 1 into the clipboard. On a selected property line, control-C will copy the value of the property to the clipboard. 
+.h2
+Copy Selected To Part Find
+.plain
+This is enabled only when a summary line is selected. The selected lines Supplier Part Number 1 value is copied to the part number field in the main window. Note that a Digi-Key locate overwrite will remove any changes made to the part in the database. 
+.h2
+Delete Part from Database
+.plain
+This is enabled only when a summary line is selected. This will bring up a dialog box confirming that you wish to delete (or cancel) the selected part in the database. 
+.h2
+Modify Name/Value
+.plain
+This is enabled only when a property line is selected. The contents of the property are copied to the fields. The value field can copied, cut or pasted to. It will error if you change the field and go to another property. You can save the changes or cancel. The changes can be committed to the database by clicking the update button or cleared by clicking the cancel button. 
+.h1
+Map Editor
+.plain
+Partlocater uses two databases: one main database for holding the part information, and a second, Meta-Database, for keeping configuration, token and mapping information. The Map Editor allows for limited modification of the Map Table. The parameter names from Digi-Key do not match those expected by the design tool. It uses the map table to replace the Digi-Key name to a local name. Also Digi-Key has far more categories that can be combined. For example, Filters, Transformers, "Inductors,Coils, Chokes", "Magnetics - Transformer, Inductor Components" can all be placed in the Inductor category. This is called a library mapping. The library mapping changes the category and a third property, reference is the Library Ref default for that category. Reference can be an identifier or ='<identifier>'. The identifier is used as the default Library Ref (Symbol name) The ='<identifier>' uses the parameter value of <identifier> property as the default Library Ref. 
+The exclude requires only the From field to be populated and will ignore that property.  Parameter names can  be remapped (this can be done in Altium too). For example, ProductDescription is mapped to Description. Some parameters are hard coded with an id since they are used for programmed views. 
+
+Clicking the Search will use the From field to search for the first match of the property. If one is found it will show up in the text fields. If it isn't found, fill out the From, To and optionally Reference and select Exclude, Library or Parameter and click Commit. 
+
+.h1
+Suggestions
+.plain
+This is not a complete database editor. You can use phpmyadmin from XAMPP or I would suggest using a database tool such as HeidiSQL (https://www.heidisql.com/). 
