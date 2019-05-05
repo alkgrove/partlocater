@@ -132,7 +132,7 @@ class Application(GenericFrame):
         if (Config().loaded_db.database_exists()):
             tables, rows = Config().loaded_db.get_count()
             if (rows > 0):
-                if askokcancel("Delete Existing Database", "Do you want to remove the existing database and replace it with the imported one?") == 0:
+                if messagebox.askokcancel("Delete Existing Database", "Do you want to remove the existing database and replace it with the imported one?") == 0:
                     self.status.set("Cancel import")
                     return
             
@@ -228,8 +228,6 @@ class Application(GenericFrame):
         try:
             token_info = Config().loaded_metadb.get_latest_token()
             Config().access_token_string = token_info['access_token']
-#            Config().loaded_metadb.connect()
-#            token_info = Config().load_current_token_info()
             Config().log_write("Current Token is " + token_info['access_token'])
         except Exception as e:
             self.status.seterror("Can't find token from %s. Use browser to get initial token", Config().loaded_metadb.host)
@@ -246,7 +244,6 @@ class Application(GenericFrame):
                 self.status.seterror("Digikey Query: %s", e)
                 return
             Config().loaded_metadb.set_token(new_token)
-#            Config().refresh_token(new_token) # replace with set token
             self.status.set("Host %s Database %s Connected, Token Updated", Config().loaded_db.host, Config().loaded_db.name)
         self.databaseMenu.entryconfig(self.disconnect_index, state=NORMAL)
         self.locate_btn.config(state=NORMAL)
@@ -340,8 +337,13 @@ class Application(GenericFrame):
             self.element_entry.config(background=self.default_color)
             return
         root.after(250, self.do_flash)
+        
+    def on_select_all(self, event):
+        self.part_info_tree.selection_add(self.part_info_tree.get_children())
 
     def on_select_new_field(self, event):
+        if not self.part_info_tree.selection(): # isEmpty return
+            return
         new_selection = self.part_info_tree.selection()[0]
         current_value = self.element_value.get()
         # first we check if it has been updated or first selection or
@@ -383,14 +385,26 @@ class Application(GenericFrame):
            
     def on_copy_element(self, event):
         try:
-            selected = self.part_info_tree.selection()[0]
-            pn = self.part_info_tree.item(selected,"values")[1]
+            list=[]
+            for selected in self.part_info_tree.selection():
+                value = self.part_info_tree.item(selected,"values")[1]
+                list.append((selected,value))
             self.clipboard_clear()
-            self.clipboard_append(pn)
+            for items in list:
+                self.clipboard_append("%s\t%s\n"%items)
             self.update()
-            self.status.set("Part Number '" + pn + "' copied to clipboard")
+            if len(list) == 1:
+                self.status.set("%s:  %s Copied to Clipboard"%list[0])
+            elif len(list) > 1:
+                self.status.set("Selected Items Copied to Clipboard")
         except Exception as e:
             pass
+
+    def on_clear_selection(self, event):
+        for item in self.part_info_tree.selection():
+            self.part_info_tree.selection_remove(item)
+        self.on_clear_element()
+        self.status.set("")
     ###############################
     ###           GUI           ###
     ###############################
@@ -486,6 +500,8 @@ class Application(GenericFrame):
         self.part_info_tree.pack(side=LEFT, anchor=W, fill=X, expand=YES)
         self.part_info_tree.bind('<<TreeviewSelect>>', self.on_select_new_field)
         self.part_info_tree.bind('<Control-c>', self.on_copy_element)
+        self.part_info_tree.bind('<Control-a>', self.on_select_all)
+        self.part_info_tree.bind('<Escape>', self.on_clear_selection)
         self.part_info_tree['show'] = 'headings'
         self.part_info_tree['columns'] = ('parameter', 'value')
         self.part_info_tree.heading('parameter', text='Parameter Name')

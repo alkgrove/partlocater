@@ -70,7 +70,11 @@ class Config:
         self.loaded_metadb = meta_database
         self.access_token_string = ""
         self.tables = []
- 
+
+    def validateIdentifier(self,str):
+        pattern = re.compile('^[a-zA-Z][a-zA-Z0-9_]*$')
+        return True if pattern.findall(str) else False
+        
     def parse_file(self):
         config = configparser.ConfigParser(allow_no_value=False)
         config.optionxform = str
@@ -87,6 +91,8 @@ class Config:
         for entry in config.sections():
             if entry[0:8] == "database":
                 db_dict = dict(config.items(entry))
+                if not self.validateIdentifier(db_dict['database']):
+                    raise "Bad database name - must be identifier"
                 self.db_list.append([MariaDB(database_id=entry, host=db_dict['host'], user=db_dict['username'],
                                              password=db_dict['password'], database_name=db_dict['database']),
                                      MariaDB(database_id=entry, host=db_dict['host'], user=db_dict['username'],
@@ -117,37 +123,14 @@ class Config:
             self.log_write("Config File %s", self.cfg_filename)
             for db in self.db_list:
                 self.log_write("ID %s Host %s User %s Database %s", db[0].id, db[0].host, db[0].user, db[0].name)
+            for item in self.library.values():
+                if not self.validateIdentifier(item):
+                    self.log_write("In map.cfg library section, %s is an invalid identifier "%item)
+                    exit()
 
     def get_client_id(self):
         return self.client_id
 
-#deprecated
-    def load_current_token_info(self):
-        if (self.loaded_metadb.connector is None):
-            raise (self.loaded_metadb.host + " not connected")
-        token_info = self.loaded_metadb.query("SELECT * FROM Token WHERE timestamp = (SELECT max(timestamp) FROM Token)")[0]
-        try:
-            self.access_token_string = token_info['access_token']
-            return token_info
-        except Exception:
-            raise Exception("No token found.")
-#deprecated
-    def refresh_token(self, new_token_info):
-        saved_tokens = 5
-        try:
-            new_token_info = json.loads(new_token_info)  # Remove/Merge
-            row_count = self.loaded_metadb.query("SELECT count(*) FROM Token")[0]['count(*)']
-            self.loaded_metadb.query("DELETE FROM Token ORDER BY timestamp ASC LIMIT %s",
-                                     max(row_count - saved_tokens, 0))
-            self.loaded_metadb.query(
-                "INSERT INTO Token (access_token, refresh_token, token_type, timestamp, expires_in)" +
-                " VALUES (%s, %s, %s, NOW() ,%s)",
-                new_token_info['access_token'], new_token_info['refresh_token'],
-                new_token_info['token_type'], new_token_info['expires_in'])
-            self.access_token_string = new_token_info['access_token']
-            return new_token_info
-        except Exception as e:
-            return None
 
     def entry_exists(self, part_id, table):
         if not self.loaded_db.table_exists(table):
