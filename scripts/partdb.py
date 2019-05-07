@@ -1,5 +1,6 @@
 import mysql.connector as maria_db
 from datetime import timedelta, datetime
+from tkinter import filedialog
 import json
 import re
 
@@ -30,6 +31,8 @@ class MariaDB:
         self.password = password
         self.name = database_name
         self.connector = None
+        self.export_cmd = None
+        self.import_cmd = None
 
     def close(self):
         if self.connector is None:
@@ -183,4 +186,25 @@ class MariaDB:
             connector.close()
         except Exception as e:
             raise Exception("Unable to set token", e)
-
+    
+    def parseCommand(self, str):
+        now = datetime.now()
+        str = re.sub(r'\%\(date\)', now.strftime("%m%d%Y"),str)
+        str = re.sub(r'\%\(time\)', now.strftime("%H%M"),str)
+        str = re.sub(r'\%\(database\)', self.name, str)
+        str = re.sub(r'\%\(username\)', self.user, str)
+        str = re.sub(r'\%\(password\)', self.password, str)
+        str = re.sub(r'\%\(host\)', self.host, str)
+        if (re.search(r'\%\(openfile\)', str)):
+            infile = filedialog.askopenfilename(initialdir = ".",title = "Open .sql file",filetypes = (("sql files","*.sql"),("all files","*.*")))
+            if not infile:
+                return None
+            str = re.sub(r'\%\(openfile\)', '"' + infile + '"', str)
+        if (re.search(r'\%\(savefile\)', str)):
+            outfile = filedialog.asksaveasfilename(initialdir = ".",title = "Save database",filetypes = (("sql file","*.sql"),("all files","*.*")))
+            if not outfile:
+                return ""
+            if not outfile.lower().endswith('.sql'):
+                outfile += '.sql'
+            str = re.sub(r'\%\(savefile\)', '"'+ outfile + '"', str)
+        return str

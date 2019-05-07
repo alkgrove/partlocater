@@ -76,7 +76,7 @@ class Config:
         return True if pattern.findall(str) else False
         
     def parse_file(self):
-        config = configparser.ConfigParser(allow_no_value=False)
+        config = configparser.ConfigParser(allow_no_value=False, interpolation=None)
         config.optionxform = str
         try:
             config.readfp(self.cfg_file)
@@ -98,6 +98,10 @@ class Config:
                                      MariaDB(database_id=entry, host=db_dict['host'], user=db_dict['username'],
                                              password=db_dict['password'],
                                              database_name=db_dict['database'] + "_metadata")])
+                if 'export' in db_dict:
+                    self.db_list[-1][0].export_cmd = db_dict['export']
+                if 'import' in db_dict:
+                    self.db_list[-1][0].import_cmd = db_dict['import']
             if entry == "authentication":
                 auth_dict = dict(config.items(entry))
                 self.client_id = auth_dict['client_id']

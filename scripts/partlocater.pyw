@@ -116,34 +116,50 @@ class Application(GenericFrame):
         self.helpwindow.protocol("WM_DELETE_WINDOW", self.close_help_window)
         self.aboutMenu.entryconfig(self.help_index, state=DISABLED)
         return
-
+    
     def on_export(self):
-        exportfilename = filedialog.asksaveasfilename(initialdir = ".",title = "Save database '" + Config().loaded_db.name + "' to file.sql",filetypes = (("sql file","*.sql"),("all files","*.*")))
-        if not exportfilename == "":
-            if not exportfilename.lower().endswith('.sql'):
-                exportfilename += '.sql'
-            try:
-                subprocess.call('"' + Config().pref['mysql_path'] + '\mysqldump" --user=' + Config().loaded_db.user + ' --password=' + Config().loaded_db.password +
-                                ' --opt --databases ' + Config().loaded_db.name +' > "' + exportfilename + '"', shell=True)
-            except OSError as e:
-                self.status.seterror("mysqldump failed: %s", e)
-            self.status.set("Exported " + exportfilename + " from database '" + Config().loaded_db.name + "'")
+        if not Config().loaded_db.export_cmd:
+            return
+        str = Config().loaded_db.parseCommand(Config().loaded_db.export_cmd)
+        if not str:
+            self.status.set("Export Cancelled")
+            return
+        Config().log_write("Export: %s"%str)        
+        try:
+            process = subprocess.Popen(str, shell=True, stderr=subprocess.PIPE)
+            err = process.communicate()[1].decode('utf-8')
+            if err:
+                Config().log_write(err)
+                self.status.seterror("Export failed: %s"%err )
+                return
+        except OSError as e:
+            self.status.seterror("Export failed: %s", e)
+        self.status.set("Export from database '" + Config().loaded_db.name + "' Complete")
+        
     def on_import(self):
+        if not Config().loaded_db.import_cmd:
+            return
         if (Config().loaded_db.database_exists()):
             tables, rows = Config().loaded_db.get_count()
             if (rows > 0):
                 if messagebox.askokcancel("Delete Existing Database", "Do you want to remove the existing database and replace it with the imported one?") == 0:
-                    self.status.set("Cancel import")
+                    self.status.set("Import Cancelled")
                     return
-            
-        importfilename = filedialog.askopenfilename(initialdir = ".",title = "Load .sql file into database '" + Config().loaded_db.name + "'",filetypes = (("sql files","*.sql"),("all files","*.*")))
-        if not importfilename == "":
-            try:
-                subprocess.call('"' + Config().pref['mysql_path'] + '\mysql" --user=' + Config().loaded_db.user + ' --password=' + Config().loaded_db.password +
-                                    ' ' + Config().loaded_db.name +' < "' + importfilename + '"', shell=True)
-            except OSError as e:
-                self.status.seterror("mysql failed: %s", e)
-            self.status.set("File " + os.path.basename(importfilename) + " imported into database " + Config().loaded_db.name )
+        str = Config().loaded_db.parseCommand(Config().loaded_db.import_cmd)
+        if not str:
+            self.status.set("Import Cancelled")
+            return
+        Config().log_write("Import: %s"%str)        
+        try:
+            process = subprocess.Popen(str, shell=True, stderr=subprocess.PIPE)
+            err = process.communicate()[1].decode('utf-8')
+            if err:
+                Config().log_write(err)
+                self.status.seterror("Import failed: %s"%err )
+                return
+        except OSError as e:
+            self.status.seterror("Import failed: %s", e)
+        self.status.set("Import to '" + Config().loaded_db.name + "' Complete" )
 
     def on_sync_token(self):
         tokenlist = []
@@ -159,12 +175,10 @@ class Application(GenericFrame):
                 tokenlist.append((mdb, token))
             except:
                 pass
-        print("Token %s Timestamp %s"%(maxtoken['access_token'], maxtoken['timestamp']))
         update = False
         # we update all databases except for the newest one
         for mdb,token in tokenlist:
             if (maxtoken['access_token'] != token['access_token']):
-                print ("Updating Tokens ", maxtoken['access_token'], token['access_token'])
                 try:
                     mdb.set_token(maxtoken);
                     self.status.set("Updating token to host: %s database: %s" % (mdb.host, mdb.name))
@@ -202,9 +216,8 @@ class Application(GenericFrame):
             self.locate_btn.config(state=DISABLED)
             self.databaseMenu.entryconfig(self.search_index, state=DISABLED)
             self.databaseMenu.entryconfig(self.disconnect_index, state=DISABLED)
-            if self.export_index is not None:
-                self.databaseMenu.entryconfig(self.export_index, state=DISABLED)
-                self.databaseMenu.entryconfig(self.import_index, state=DISABLED)
+            self.databaseMenu.entryconfig(self.export_index, state=DISABLED)
+            self.databaseMenu.entryconfig(self.import_index, state=DISABLED)
         if Config().loaded_metadb is not None:
             Config().loaded_metadb.close()
             Config().loaded_metadb = None
@@ -212,8 +225,8 @@ class Application(GenericFrame):
     def on_connect(self, database, meta_database):
         self.on_disconnect()
         Config().load_database(database, meta_database)
-        if ((self.export_index is not None) and (Config().loaded_db.host == 'localhost')):
-            self.databaseMenu.entryconfig(self.import_index, state=NORMAL)
+        if Config().loaded_db.export_cmd is not None:
+            self.databaseMenu.entryconfig(self.export_index, state=NORMAL)
         try:
             Config().loaded_db.connect()
             self.status.set("Host %s Database %s Connected", Config().loaded_db.host, Config().loaded_db.name)
@@ -221,8 +234,8 @@ class Application(GenericFrame):
             self.status.seterror("Failed to connect to Host %s Database %s. %s", Config().loaded_db.host, Config().loaded_db.name, e)
             return
         self.databaseMenu.entryconfig(self.search_index, state=NORMAL)
-        if ((self.export_index is not None) and (Config().loaded_db.host == 'localhost')):
-            self.databaseMenu.entryconfig(self.export_index, state=NORMAL)
+        if Config().loaded_db.import_cmd is not None:
+            self.databaseMenu.entryconfig(self.import_index, state=NORMAL)
         Config().log_write("Check Token")
         # get the latest token in the database
         try:
@@ -444,13 +457,10 @@ class Application(GenericFrame):
         self.sync_token_index = 4
         if (len(Config().db_list) > 1):
             self.databaseMenu.entryconfig(self.sync_token_index, state=NORMAL)
-        self.export_index = None
-        self.import_index = None
-        if 'mysql_path' in Config().pref:
-            self.databaseMenu.add_command(label="Export", state=DISABLED, command=lambda : self.on_export())
-            self.export_index = 5
-            self.databaseMenu.add_command(label="Import", state=DISABLED, command=lambda : self.on_import())
-            self.import_index = 6
+        self.databaseMenu.add_command(label="Export", state=DISABLED, command=lambda : self.on_export())
+        self.export_index = 5
+        self.databaseMenu.add_command(label="Import", state=DISABLED, command=lambda : self.on_import())
+        self.import_index = 6
         self.databaseMenu.add_command(label="Quit", command=root.quit);
         self.menubar.add_cascade(label="File", menu=self.databaseMenu)
         self.aboutMenu = Menu(self.menubar, tearoff=0)
