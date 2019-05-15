@@ -103,6 +103,18 @@ class Application(GenericFrame):
         self.aboutMenu.entryconfig(self.help_index, state=NORMAL)
         self.helpwindow.destroy()
 
+    def close_manual_add_window(self):
+        self.databaseMenu.entryconfig(self.manualadd_index, state=NORMAL)
+        self.manualaddwindow.destroy()
+        
+    def on_manual_add(self):
+        self.manualaddwindow = Toplevel(self.master)
+        Config().tables = Config().loaded_db.get_tables()
+        manualadd = ManualAddApplication(parent=self.manualaddwindow)
+        self.manualaddwindow.protocol("WM_DELETE_WINDOW", self.close_manual_add_window)
+        self.databaseMenu.entryconfig(self.manualadd_index, state=DISABLED)
+        return
+
     def on_about(self):
         self.aboutwindow = Toplevel(self.master)
         about = AboutApplication(parent=self.aboutwindow)
@@ -214,6 +226,7 @@ class Application(GenericFrame):
             self.status.set("Database %s Disconnected", Config().loaded_db.name)
             Config().loaded_db = None
             self.locate_btn.config(state=DISABLED)
+            self.databaseMenu.entryconfig(self.manualadd_index, state=DISABLED)            
             self.databaseMenu.entryconfig(self.search_index, state=DISABLED)
             self.databaseMenu.entryconfig(self.disconnect_index, state=DISABLED)
             self.databaseMenu.entryconfig(self.export_index, state=DISABLED)
@@ -234,6 +247,8 @@ class Application(GenericFrame):
             self.status.seterror("Failed to connect to Host %s Database %s. %s", Config().loaded_db.host, Config().loaded_db.name, e)
             return
         self.databaseMenu.entryconfig(self.search_index, state=NORMAL)
+        self.databaseMenu.entryconfig(self.manualadd_index, state=NORMAL)            
+
         if Config().loaded_db.import_cmd is not None:
             self.databaseMenu.entryconfig(self.import_index, state=NORMAL)
         Config().log_write("Check Token")
@@ -453,14 +468,16 @@ class Application(GenericFrame):
         self.databaseMenu.add_separator()
         self.databaseMenu.add_command(label="Search Database", state=DISABLED, command=lambda : self.on_open_search())
         self.search_index = 3
+        self.databaseMenu.add_command(label="Manual Add", state=DISABLED, command=lambda : self.on_manual_add())
+        self.manualadd_index = 4
         self.databaseMenu.add_command(label="Sync Tokens", state=DISABLED, command=lambda : self.on_sync_token())
-        self.sync_token_index = 4
+        self.sync_token_index = 5
         if (len(Config().db_list) > 1):
             self.databaseMenu.entryconfig(self.sync_token_index, state=NORMAL)
         self.databaseMenu.add_command(label="Export", state=DISABLED, command=lambda : self.on_export())
-        self.export_index = 5
+        self.export_index = 6
         self.databaseMenu.add_command(label="Import", state=DISABLED, command=lambda : self.on_import())
-        self.import_index = 6
+        self.import_index = 7
         self.databaseMenu.add_command(label="Quit", command=root.quit);
         self.menubar.add_cascade(label="File", menu=self.databaseMenu)
         self.aboutMenu = Menu(self.menubar, tearoff=0)
@@ -498,6 +515,7 @@ class Application(GenericFrame):
         self.status_frame = Frame(self.status_labelframe);
         self.status_frame.pack(side=TOP, fill=X, expand=YES, padx=6)
         self.status = self.StatusBar(self.status_frame, self)
+        Config().status = self.status
         self.status.set("Select Database")
 
         # Part Info Text Box

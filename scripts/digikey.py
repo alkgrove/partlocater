@@ -74,6 +74,7 @@ def translate_part_json(data):
     try:
         dst[parameter['StandardPricing']] = ", ".join(str(i['BreakQuantity'])+"="+str(i['UnitPrice'])
                                                       for i in (data['PartDetails']['StandardPricing']))
+        dst[parameter['UnitPrice']] = str(data['PartDetails']['StandardPricing'][0]['UnitPrice'])
         dst[parameter['Category']] = data['PartDetails']['Category']['Text']
         dst[parameter['RohsInfo']] = data['PartDetails']['RohsInfo']
         for e in data['PartDetails']['Parameters']:

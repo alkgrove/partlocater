@@ -50,6 +50,7 @@ class Config:
         self.libref = {}
         self.pref = {}
         self.tables = []
+        self.status = None
         self.log_filename = None
         self.cfg_filename = os.environ.get(self.CFG_ENV_VAR)
         if self.cfg_filename is None:
@@ -70,10 +71,6 @@ class Config:
         self.loaded_metadb = meta_database
         self.access_token_string = ""
         self.tables = []
-
-    def validateIdentifier(self,str):
-        pattern = re.compile('^[a-zA-Z][a-zA-Z0-9_]*$')
-        return True if pattern.findall(str) else False
         
     def parse_file(self):
         config = configparser.ConfigParser(allow_no_value=False, interpolation=None)
@@ -91,7 +88,7 @@ class Config:
         for entry in config.sections():
             if entry[0:8] == "database":
                 db_dict = dict(config.items(entry))
-                if not self.validateIdentifier(db_dict['database']):
+                if not validateIdentifier(db_dict['database']):
                     raise "Bad database name - must be identifier"
                 self.db_list.append([MariaDB(database_id=entry, host=db_dict['host'], user=db_dict['username'],
                                              password=db_dict['password'], database_name=db_dict['database']),
@@ -128,7 +125,7 @@ class Config:
             for db in self.db_list:
                 self.log_write("ID %s Host %s User %s Database %s", db[0].id, db[0].host, db[0].user, db[0].name)
             for item in self.library.values():
-                if not self.validateIdentifier(item):
+                if not validateIdentifier(item):
                     self.log_write("In map.cfg library section, %s is an invalid identifier "%item)
                     exit()
 

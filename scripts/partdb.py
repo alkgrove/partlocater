@@ -5,7 +5,7 @@ import json
 import re
 
 def validate(str):
-    pattern = re.compile('[\'\"\`]')
+    pattern = re.compile(r'[\'\"\`]')
     if (isinstance(str, list)):
         for item in str:
             if pattern.findall(item) != []:
@@ -13,6 +13,10 @@ def validate(str):
         return True
     else:
         return True if pattern.findall(str) == [] else False
+
+def validateIdentifier(str):
+    pattern = re.compile('^[a-zA-Z][a-zA-Z0-9_]*$')
+    return True if pattern.findall(str) else False
     
 def sanitize(str):
     pattern = re.compile('[`\]\[;\(\)\'\"+]`')
