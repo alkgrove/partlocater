@@ -57,6 +57,8 @@ def digikey_get_new_token(refresh_token):
 
 
 def translate_part_json(data):
+    if data is None:
+        return None, None, None, None
     data = json.loads(data)
     exclude = Config().exclude
     include = Config().include
@@ -64,8 +66,8 @@ def translate_part_json(data):
     library = Config().library
     libref = Config().libref
     dst = dict()
+    hidden = dict()
     indirectForm = re.compile(r"\='([\w\s]+)'")
-
     try:
         table_name = library[data['PartDetails']['Category']['Text']]
     except KeyError:
@@ -74,7 +76,6 @@ def translate_part_json(data):
     try:
         dst[parameter['StandardPricing']] = ", ".join(str(i['BreakQuantity'])+"="+str(i['UnitPrice'])
                                                       for i in (data['PartDetails']['StandardPricing']))
-        dst[parameter['UnitPrice']] = str(data['PartDetails']['StandardPricing'][0]['UnitPrice'])
         dst[parameter['Category']] = data['PartDetails']['Category']['Text']
         dst[parameter['RohsInfo']] = data['PartDetails']['RohsInfo']
         for e in data['PartDetails']['Parameters']:
@@ -91,6 +92,17 @@ def translate_part_json(data):
         dst[parameter['ManufacturerName']] = data['PartDetails']['ManufacturerName']['Text']
         dst[parameter['QuantityOnHand']] = data['PartDetails']['QuantityOnHand']
         dst["Supplier 1"] = "Digi-Key"
+        altPackage = {}
+        for item in data['PartDetails']['AlternatePackaging']:
+            minquantity = item['MinimumOrderQuantity']
+            packaging = item['Packaging']['Value']
+            spn = item['DigiKeyPartNumber']
+            if (minquantity > 1) or ('Digi-Reel' in packaging):
+                altPackage[spn + " " + packaging + " (" + str(minquantity) + ")"] = spn
+        hidden['MinimumOrderQuantity'] = data['PartDetails']['MinimumOrderQuantity']
+        hidden['Packaging'] = data['PartDetails']['Packaging']['Value']
+        if len(altPackage) > 0:
+            dst[parameter['AltPackaging']] = altPackage[[*altPackage.keys()][0]]
         if 'Supplier Device Package' in dst:
             dst["Footprint Ref"] = dst['Supplier Device Package']
         elif 'Package / Case' in dst:
@@ -115,4 +127,4 @@ def translate_part_json(data):
             dst[incl] = include[incl]
     except KeyError as e:
         raise Exception("Failed to load all part fields."+str(e))
-    return dst, table_name
+    return dst, table_name, altPackage, hidden

@@ -46,6 +46,7 @@ class Config:
         self.exclude = {}
         self.include = {}
         self.library = {}
+        self.bom = {}
         self.parameter = {}
         self.libref = {}
         self.pref = {}
@@ -118,6 +119,8 @@ class Config:
                 self.include = dict(mapconfig.items(entry))
             if entry == "reference":
                 self.libref = dict(mapconfig.items(entry))
+            if entry == "BOM":
+                self.bom = dict(mapconfig.items(entry))
         if ('log' in self.pref):
             self.log_filename = self.pref['log']
             self.log_write("---------- Application Started")

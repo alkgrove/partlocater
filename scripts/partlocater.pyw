@@ -38,11 +38,12 @@ import digikey
 from configReader import *
 from digikey import *
 import partdb
-from searchdb import *
+from appwindows import *
 from about import *
 import traceback
 from tkinter import font, filedialog, messagebox
 from genericframe import *
+from bom import *
 from tkinter.ttk import Treeview, Scrollbar
 ###############################
 ###   Tkinter App Window    ###
@@ -59,11 +60,13 @@ class Application(GenericFrame):
         self.create_widgets()
         self.loaded_parameters = dict()
         self.loaded_table = None
+        self.alt_package = {}
         self.commit_btn.config(state=DISABLED)
         self.locate_btn.config(state=DISABLED)
         self.clear_btn.config(state=DISABLED)
         self.current_selection = None
-        self.hiliteList = {'Library Ref':1, 'Footprint Ref':1, 'Base Part Number':1}
+        self.hidden = {}
+        self.hiliteList = {'Library Ref':1, 'Footprint Ref':1, 'Base Part Number':1, 'Supplier Packaging 1':1}
     ###############################
     ###       Exceptions        ###
     ###############################
@@ -106,7 +109,11 @@ class Application(GenericFrame):
     def close_manual_add_window(self):
         self.databaseMenu.entryconfig(self.manualadd_index, state=NORMAL)
         self.manualaddwindow.destroy()
-        
+
+    def close_BOM_window(self):
+        self.databaseMenu.entryconfig(self.update_BOM_index, state=NORMAL)
+        self.updateBOMwindow.destroy()
+     
     def on_manual_add(self):
         self.manualaddwindow = Toplevel(self.master)
         Config().tables = Config().loaded_db.get_tables()
@@ -210,7 +217,7 @@ class Application(GenericFrame):
 
     def on_open_search(self):
         if Config().loaded_db is None:
-            self.handleError("Failed to open Search Window.", Exception("No database currently loaded!"))
+            self.handleError("Search Failed", Exception("No database currently loaded!"))
             return
         Config().tables = Config().loaded_db.get_tables()
         self.searchwindow = Toplevel(self.master)
@@ -219,7 +226,18 @@ class Application(GenericFrame):
         self.searchwindow.protocol("WM_DELETE_WINDOW", self.close_search_window)
         self.databaseMenu.entryconfig(self.search_index, state=DISABLED)
         return
- 
+
+    def on_update_BOM(self):
+        if Config().loaded_db is None:
+            self.handleError("Update BOM Failed.", Exception("No database currently loaded!"))
+            return
+        Config().tables = Config().loaded_db.get_tables()
+        self.updateBOMwindow = Toplevel(self.master)
+        self.updateBOMwindow.resizable(False, False)
+        app = updateBOMApplication(parent=self.updateBOMwindow)
+        self.updateBOMwindow.protocol("WM_DELETE_WINDOW", self.close_BOM_window)
+        self.databaseMenu.entryconfig(self.update_BOM_index, state=DISABLED)
+          
     def on_disconnect(self):
         if Config().loaded_db is not None:
             Config().loaded_db.close()
@@ -228,9 +246,11 @@ class Application(GenericFrame):
             self.locate_btn.config(state=DISABLED)
             self.databaseMenu.entryconfig(self.manualadd_index, state=DISABLED)            
             self.databaseMenu.entryconfig(self.search_index, state=DISABLED)
+            self.databaseMenu.entryconfig(self.update_BOM_index, state=DISABLED)
             self.databaseMenu.entryconfig(self.disconnect_index, state=DISABLED)
             self.databaseMenu.entryconfig(self.export_index, state=DISABLED)
             self.databaseMenu.entryconfig(self.import_index, state=DISABLED)
+            self.dbselect.set("")
         if Config().loaded_metadb is not None:
             Config().loaded_metadb.close()
             Config().loaded_metadb = None
@@ -247,7 +267,9 @@ class Application(GenericFrame):
             self.status.seterror("Failed to connect to Host %s Database %s. %s", Config().loaded_db.host, Config().loaded_db.name, e)
             return
         self.databaseMenu.entryconfig(self.search_index, state=NORMAL)
+        self.databaseMenu.entryconfig(self.update_BOM_index, state=NORMAL)
         self.databaseMenu.entryconfig(self.manualadd_index, state=NORMAL)            
+        self.databaseMenu.entryconfig(self.disconnect_index, state=NORMAL)
 
         if Config().loaded_db.import_cmd is not None:
             self.databaseMenu.entryconfig(self.import_index, state=NORMAL)
@@ -273,7 +295,6 @@ class Application(GenericFrame):
                 return
             Config().loaded_metadb.set_token(new_token)
             self.status.set("Host %s Database %s Connected, Token Updated", Config().loaded_db.host, Config().loaded_db.name)
-        self.databaseMenu.entryconfig(self.disconnect_index, state=NORMAL)
         self.locate_btn.config(state=NORMAL)
         self.clear_btn.config(state=NORMAL)
         Config().log_write("Connected to "+database.name)
@@ -309,6 +330,7 @@ class Application(GenericFrame):
             self.handleError("Error while committing entry into Database", e)
 
     def on_locate_btn(self):
+        alt_package = {}
         try:
             part_num = self.get_part_num_field()
             self.status.set("Query Digi-Key")
@@ -317,7 +339,7 @@ class Application(GenericFrame):
             self.handleError("",e)
             return
         try:
-            self.loaded_parameters, self.loaded_table = translate_part_json(part_json)
+            self.loaded_parameters, self.loaded_table, alt_package, self.hidden = translate_part_json(part_json)
         except Exception as e:
             self.handleError("Translation Error", e)
             return
@@ -329,17 +351,30 @@ class Application(GenericFrame):
             self.element_update.config(state=DISABLED)
             if Config().entry_exists(part_num, self.loaded_table):
                 self.commit_btn["text"] = "Overwrite"
-                part_stat = ", part is already in database"
+                part_stat = ", part is already in database."
             else:
                 self.commit_btn["text"] = "Commit"
-                part_stat = ", not in database, commit to add"
+                part_stat = ", not in database, commit to add."
         except Exception as e:
             self.handleError("Error while searching for entry in Database", e)
         self.on_clear_element()
         self.reset_hilite()
-        self.status.set("Found part %s%s", part_num, part_stat)
+        if ('warnOnDigiReel' in Config().pref) and ('Digi-Reel' in self.hidden['Packaging']):
+            part_stat += " Warning - Digireel Selected"
+            self.status.setwarn("Found part %s%s", part_num, part_stat)
+            Config().log_write("%s part located warn on Digireel"%(part_num))
+        elif ('warnOnVolumePackaging' in Config().pref) and (self.hidden['MinimumOrderQuantity'] > 1):
+            part_stat += " Warning - High Volume Packaging Selected"
+            self.status.setwarn("Found part %s%s", part_num, part_stat)
+            Config().log_write("%s part located warn on high volume packaging (ie Tape/Reel)"%(part_num))
+        else:
+            self.status.set("Found part %s%s", part_num, part_stat)
         self.part_label.set("Part Info: %s" % part_num)
         self.update_part_info(self.loaded_parameters)
+        self.element_menu.delete(0,'end')
+        for item in alt_package.keys():
+            self.element_menu.add_radiobutton(variable=self.element_value, value = alt_package[item], label=item)
+
          
     def on_update_element(self):
         if self.current_selection is None:
@@ -374,12 +409,17 @@ class Application(GenericFrame):
             return
         new_selection = self.part_info_tree.selection()[0]
         current_value = self.element_value.get()
+        key = self.part_info_tree.item(new_selection, "text")
+        if "Supplier Packaging" in key:
+            self.element_menubutton.pack(side=LEFT, fill=X, expand=YES, pady=4, padx=8)
+        else:
+            self.element_menubutton.pack_forget()
+        
         # first we check if it has been updated or first selection or
         # we check if the last selected item value and the value in the text entry has changed
         if self.current_selection is None or self.part_info_tree.item(self.current_selection, "values")[1] == current_value:
             # no old stuff to update, so update the modify fields and set the new current_selection
             value = self.part_info_tree.item(new_selection, "values")[1]
-            key = self.part_info_tree.item(new_selection, "text")
             self.element_name.set(key)
             self.element_value.set(value)
             self.current_selection = new_selection
@@ -410,7 +450,7 @@ class Application(GenericFrame):
                 else:
                     self.part_info_tree.insert('', 'end', iid=k, text=k, values=(k, v))
 
-           
+
     def on_copy_element(self, event):
         try:
             list=[]
@@ -461,8 +501,9 @@ class Application(GenericFrame):
         self.databaseMenu = Menu(self.menubar, tearoff=0)
         self.databaseListMenu = Menu(self.databaseMenu, tearoff=0)
         self.databaseMenu.add_cascade(label="Connect to", menu=self.databaseListMenu)
+        self.dbselect = StringVar()
         for db,mdb in Config().db_list:
-            self.databaseListMenu.add_command(label=db.id + " (" + db.host + " " + db.name + ")", command=lambda db=db, mdb=mdb: self.on_connect(db,mdb))
+            self.databaseListMenu.add_radiobutton(variable=self.dbselect, value = db.id, label=db.id + " (" + db.host + " " + db.name + ")", command=lambda db=db, mdb=mdb: self.on_connect(db,mdb))
         self.databaseMenu.add_command(label="Disconnect", state=DISABLED, command=lambda : self.on_disconnect())
         self.disconnect_index = 1
         self.databaseMenu.add_separator()
@@ -478,6 +519,8 @@ class Application(GenericFrame):
         self.export_index = 6
         self.databaseMenu.add_command(label="Import", state=DISABLED, command=lambda : self.on_import())
         self.import_index = 7
+        self.databaseMenu.add_command(label="Update BOM...", state=DISABLED, command=lambda : self.on_update_BOM())
+        self.update_BOM_index = 8
         self.databaseMenu.add_command(label="Quit", command=root.quit);
         self.menubar.add_cascade(label="File", menu=self.databaseMenu)
         self.aboutMenu = Menu(self.menubar, tearoff=0)
@@ -546,18 +589,23 @@ class Application(GenericFrame):
         self.part_info_tree.tag_configure('boldfont', font=sysbold)        
         self.part_info_tree.tag_configure('hilite', background='azure')
         self.element_name = StringVar()
-        self.element_label = Label(self.element_frame, textvariable=self.element_name, width=30, anchor=W, justify=LEFT)
-        self.element_label.pack(side=LEFT, anchor=W, fill=X, expand=YES, pady=4)
+        self.element_label = Label(self.element_frame, textvariable=self.element_name, width=30, anchor=E)
+        self.element_label.pack(side=LEFT, anchor=W, fill=X, expand=NO, pady=4, padx=4)
         self.element_value = StringVar()
         self.element_entry = Entry(self.element_frame, width=50, textvariable=self.element_value)
-        self.element_entry.pack(side=LEFT, fill=X, expand=YES, pady=4)
+        self.element_entry.pack(side=LEFT, fill=X, expand=YES, pady=4, padx=4)
         self.default_color = self.element_entry.cget('background')
 
         self.element_update = Button(self.element_frame, text="Update", command=self.on_update_element, state=DISABLED)
-        self.element_update.pack(side=LEFT, fill=X, expand=YES, pady=4)
+        self.element_update.pack(side=LEFT, fill=X, expand=YES, pady=4, padx=4)
         self.element_cancel = Button(self.element_frame, text="Cancel", command=self.on_clear_element)
-        self.element_cancel.pack(side=LEFT, fill=X, expand=YES, pady=4)
-        
+        self.element_cancel.pack(side=LEFT, fill=X, expand=YES, pady=4, padx=4)
+        self.element_menubutton = Menubutton(self.element_frame, text="Alt Package", relief=RAISED)
+        self.element_menu = Menu(self.element_menubutton, tearoff=0)
+        self.element_menubutton.configure(menu=self.element_menu)
+
+
+
 
 Config().parse_file()
 FAVICON = "../assets/favicon.ico"

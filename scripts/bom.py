@@ -245,7 +245,6 @@ class updateBOMApplication(GenericFrame):
                 if stock == 0:
                     self.report_write("Out of stock for Part %s Row %d", part['Supplier Part Number 1'], row)
         
-            #to do - for use_alternate here
         try:
             self.BOMwb.save(self.filename.get())
         except Exception as e:

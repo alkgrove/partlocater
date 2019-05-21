@@ -67,7 +67,7 @@ echo Copy web files to %digikey_web%
 echo Creating shortcut - Drag to start menu or taskbar
 powershell "$s=(New-Object -COM WScript.Shell).CreateShortcut('Partlocater.lnk');$p=(Get-Item -Path '.\').FullName;$s.TargetPath=Join-Path (Join-Path $p 'scripts') 'partlocater.pyw';$s.WorkingDirectory=Join-Path $p 'scripts';$s.IconLocation=Join-Path (Join-Path $p 'assets') 'pl.ico';$s.Save()"
 python -m pip install --upgrade pip
-python -m pip install requests mysql-connector
+python -m pip install requests mysql-connector openpyxl
 
 exit /b
 

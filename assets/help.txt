@@ -22,6 +22,10 @@ File
     Export -> Saves the current connected database to a .sql file. This only works for localhost server databases. This requires mysqldump and mysql executables with a mysql_path defined in preferences section of the partlocater.cfg file. 
 .plain
     Import -> Import from an .sql file into the current connected database. This removes any prior version of that database and replaces it with the imported data. This only works for localhost server databases. This requires mysqldump and mysql executables with a mysql_path defined in preferences section of the partlocater.cfg file.
+.plain
+    Update BOM -> Opens the Update BOM window. With the browse key, open the .xlsx BOM file you want updated. If you want to update the database from Digi-Key from every part in the BOM, check the Update Database button. This will be slow and will not work if the line item count exceeds the daily query limit. This queries Digi-Key for every part in the BOM and update pricing and available stock. 
+If the best price button is checked, then it will increase the extended quantities, if the quantity at the next price break cost is less that extended quantity times the price break otherwise it will leave exact quantities. 
+Press update button to run the process which should end with BOM updated. If you go into the BOM you should see the Unit Price, Extended Quantities and Stock columns updated for Digi-Key Supplier. 
 
 .plain
     Quit -> Exits the application
@@ -103,13 +107,6 @@ This is enabled only when a summary line is selected. This will bring up a dialo
 Modify Name/Value
 .plain
 This is enabled only when a property line is selected. The contents of the property are copied to the fields. The value field can copied, cut or pasted to. It will error if you change the field and go to another property. You can save the changes or cancel. The changes can be committed to the database by clicking the update button or cleared by clicking the cancel button. 
-.h1
-Map Editor
-.plain
-Partlocater uses two databases: one main database for holding the part information, and a second, Meta-Database, for keeping configuration, token and mapping information. The Map Editor allows for limited modification of the Map Table. The parameter names from Digi-Key do not match those expected by the design tool. It uses the map table to replace the Digi-Key name to a local name. Also Digi-Key has far more categories that can be combined. For example, Filters, Transformers, "Inductors,Coils, Chokes", "Magnetics - Transformer, Inductor Components" can all be placed in the Inductor category. This is called a library mapping. The library mapping changes the category and a third property, reference is the Library Ref default for that category. Reference can be an identifier or ='<identifier>'. The identifier is used as the default Library Ref (Symbol name) The ='<identifier>' uses the parameter value of <identifier> property as the default Library Ref. 
-The exclude requires only the From field to be populated and will ignore that property.  Parameter names can  be remapped (this can be done in Altium too). For example, ProductDescription is mapped to Description. Some parameters are hard coded with an id since they are used for programmed views. 
-
-Clicking the Search will use the From field to search for the first match of the property. If one is found it will show up in the text fields. If it isn't found, fill out the From, To and optionally Reference and select Exclude, Library or Parameter and click Commit. 
 
 .h1
 Suggestions

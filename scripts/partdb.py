@@ -109,6 +109,7 @@ class MariaDB:
         except Exception as e:
             raise e
 
+
     ###############################
     ###     Query Wrappers      ###
     ###############################
@@ -159,8 +160,42 @@ class MariaDB:
             connector.commit()
             connector.close()     
         except Exception as e:
-            raise e        
+            raise e
+  
+    def get_priceinfo(self, tables, viewdb, supplier, partlist):
+        result = []
+        try:
+            connector = maria_db.connect(host=self.host, user=self.user, passwd=self.password)
+            my_cursor = connector.cursor(dictionary=True)
+            pricelist = "`" + viewdb + "`.pricelist"
+            qry = "CREATE VIEW " + pricelist + " AS "
+            qry += " UNION ".join("(SELECT `Supplier Part Number 1`,`Supplier Stock 1`,`Pricing 1` FROM %s.%s WHERE `Supplier 1` = '%s')"%(self.name, table, supplier) for table in tables)
+            my_cursor.execute(qry)
+            connector.commit()
+            qry = "SELECT * FROM " + pricelist + " WHERE `Supplier Part Number 1` IN ('"
+            qry += "','".join(part[0] for part in partlist)
+            qry += "')"
+            my_cursor.execute(qry)
+            rv = my_cursor.fetchall()
+            my_cursor.execute("DROP VIEW " + pricelist)
+            connector.commit()
+            for r in rv:
+                result.append(r)
+            return result
+        except Exception as e:
+            raise e
 
+    def update_priceinfo(self, table, pricing, stock, part):
+        try:
+            connector = maria_db.connect(host=self.host, user=self.user, passwd=self.password)
+            my_cursor = connector.cursor(dictionary=True)
+            tablename = "`" + self.name + "`.`" + table + "`"
+            my_cursor.execute("UPDATE " + tablename + " SET `Pricing 1` = '%s', `Supplier Stock 1` = '%s' WHERE `Supplier Part Number 1` = '%s'", pricing, str(stock), part)
+            connector.commit()
+            connector.close()
+        except Exception as e:
+            raise e
+            
     def get_latest_token(self):
         try:
             connector = maria_db.connect(host=self.host, user=self.user, passwd=self.password, db=self.name)
