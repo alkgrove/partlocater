@@ -3,9 +3,7 @@ Find a part on Digi-Key and import parameters into local database
 
 We are not associated with Digi-Key in any way other than being a long time customer. Digi-Key has an api-portal for which one of the functions is to provide all the technical parameters for the components they sell. They aggressively keep this accurate and up to date as if their business depends on it. This app will query Digi-Key with a Digi-Key partnumber and downloads the parameters from Digi-Key and puts them into a SQL database. Several eCAD tools can use the information in the database to put the information into the schematic. 
 
-I use Altium and was very enthusiastic about their ability to query some popular distributors and place the parameters into the schematic symbol. Having data direct from the distibutor has made more sense to me than a data aggregator. If I found an error with a Digi-Key data and sent a bug report, it was usually fixed within hours. They are focused on fixing data for their product. Octopart has been reporting cut tape as tape/reel for the past two years. They are trying to combine a large set of distributors and sluggish to make the data accurate. 
-
-So I wrote this tool. Initially it is written for Altium Designer because that is what I'm using this year.
+This could work for a number of tools such as Orcad and Altium. Since I have Altium, it is the first tool that it works for. 
 
 It would be cool if this were made to work on open-source tools. Haven't researched that yet though.
 
