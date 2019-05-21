@@ -66,7 +66,7 @@ class Application(GenericFrame):
         self.clear_btn.config(state=DISABLED)
         self.current_selection = None
         self.hidden = {}
-        self.hiliteList = {'Library Ref':1, 'Footprint Ref':1, 'Base Part Number':1, 'Supplier Packaging 1':1}
+        self.hiliteDict = {'Library Ref':1, 'Footprint Ref':1, 'Base Part Number':1, 'Supplier Packaging 1':1}
     ###############################
     ###       Exceptions        ###
     ###############################
@@ -91,8 +91,8 @@ class Application(GenericFrame):
         self.searchwindow.destroy()
 
     def reset_hilite(self):
-        for i in self.hiliteList:
-            self.hiliteList[i] = 1
+        for i in self.hiliteDict:
+            self.hiliteDict[i] = 1
 
     def close_about_window(self):
         self.aboutMenu.entryconfig(self.about_index, state=NORMAL)
@@ -329,6 +329,17 @@ class Application(GenericFrame):
         except Exception as e:
             self.handleError("Error while committing entry into Database", e)
 
+    def restore_custom(self):
+        qry = "SELECT `" + "`,`".join(item for item in [*self.hiliteDict.keys()]) + "` FROM `" + self.loaded_table
+        qry += "` WHERE `Supplier Part Number 1` = '" + self.loaded_parameters['Supplier Part Number 1'] + "'"
+        try:
+           result = Config().loaded_db.query(qry)
+        except Exception as e:
+            self.handleError("Error while restoring custom settings", e)
+        for key in result[0]:
+            self.loaded_parameters[key] = result[0][key]
+
+
     def on_locate_btn(self):
         alt_package = {}
         try:
@@ -352,6 +363,7 @@ class Application(GenericFrame):
             if Config().entry_exists(part_num, self.loaded_table):
                 self.commit_btn["text"] = "Overwrite"
                 part_stat = ", part is already in database."
+                self.restore_custom()
             else:
                 self.commit_btn["text"] = "Commit"
                 part_stat = ", not in database, commit to add."
@@ -388,8 +400,8 @@ class Application(GenericFrame):
         self.loaded_parameters[item_name] = new_item_value
         self.on_clear_element()
         self.status.set("%s updated", item_name)
-        if (item_name in self.hiliteList):
-            self.hiliteList[item_name] = 0
+        if (item_name in self.hiliteDict):
+            self.hiliteDict[item_name] = 0
         self.update_part_info(self.loaded_parameters)
 
     def do_flash(self):
@@ -445,7 +457,7 @@ class Application(GenericFrame):
         self.part_info_tree.delete(*self.part_info_tree.get_children())
         if len(dict) > 0:
             for k, v in dict.items():
-                if k in self.hiliteList and self.hiliteList[k]:
+                if k in self.hiliteDict and self.hiliteDict[k]:
                     self.part_info_tree.insert('', 'end', iid=k, text=k, values=(k, v), tags=('hilite','boldfont'))
                 else:
                     self.part_info_tree.insert('', 'end', iid=k, text=k, values=(k, v))

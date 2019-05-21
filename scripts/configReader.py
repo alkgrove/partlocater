@@ -32,7 +32,7 @@ class Config:
     CFG_ENV_VAR = "PARTLOCATER_CFG"
     MAP_FILENAME = "../assets/map.cfg"
     TS_FORMAT = "%d/%m/%y %H:%M:%S "
-
+    REVISION = "v1.0-beta"
     def __init__(self):
         self.loaded_db = None
         self.loaded_metadb = None
@@ -134,8 +134,7 @@ class Config:
 
     def get_client_id(self):
         return self.client_id
-
-
+       
     def entry_exists(self, part_id, table):
         if not self.loaded_db.table_exists(table):
             return False
