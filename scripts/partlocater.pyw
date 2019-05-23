@@ -41,10 +41,10 @@ import partdb
 from appwindows import *
 from about import *
 import traceback
-from tkinter import font, filedialog, messagebox
+from tkinter import ttk, font, filedialog, messagebox
 from genericframe import *
 from bom import *
-from tkinter.ttk import Treeview, Scrollbar
+from tkinter.ttk import Treeview, Scrollbar, Button
 ###############################
 ###   Tkinter App Window    ###
 ###############################
@@ -66,7 +66,7 @@ class Application(GenericFrame):
         self.clear_btn.config(state=DISABLED)
         self.current_selection = None
         self.hidden = {}
-        self.hiliteDict = {'Library Ref':1, 'Footprint Ref':1, 'Base Part Number':1, 'Supplier Packaging 1':1}
+        self.hiliteDict = {'Library Ref':1, 'Footprint Ref':1, 'Base Part Number':1}
     ###############################
     ###       Exceptions        ###
     ###############################
@@ -422,7 +422,7 @@ class Application(GenericFrame):
         new_selection = self.part_info_tree.selection()[0]
         current_value = self.element_value.get()
         key = self.part_info_tree.item(new_selection, "text")
-        if "Supplier Packaging" in key:
+        if "Supplier Packaging" in key and self.element_menu.index('end') > 0:
             self.element_menubutton.pack(side=LEFT, fill=X, expand=YES, pady=4, padx=8)
         else:
             self.element_menubutton.pack_forget()
@@ -547,22 +547,22 @@ class Application(GenericFrame):
 
         # Part Number Entry Field
         self.part_num_label = Label(self.right_frame, text="Part Number")
-        self.part_num_label.pack(side=TOP, anchor=W, fill=X, expand=YES)
+        self.part_num_label.pack(side=TOP, anchor=W, fill=X, expand=YES, pady=2)
         self.part_num_string=StringVar()
         self.part_num_text = Entry(self.right_frame, textvariable=self.part_num_string)
-        self.part_num_text.pack(side=TOP, anchor=W, fill=X, expand=YES)
+        self.part_num_text.pack(side=TOP, anchor=W, fill=X, expand=YES, pady=2)
 
         # Locate Button
-        self.locate_btn = Button(self.right_frame, text="Locate", command=self.on_locate_btn)
-        self.locate_btn.pack(side=TOP, anchor=W, fill=X, expand=YES)
+        self.locate_btn = ttk.Button(self.right_frame, text="Locate", command=self.on_locate_btn)
+        self.locate_btn.pack(side=TOP, anchor=W, fill=X, expand=YES, pady=2)
         
         # Cancel Button
-        self.clear_btn = Button(self.right_frame, text="Clear", command=self.on_clear_btn)
-        self.clear_btn.pack(side=TOP, anchor=W, fill=X, expand=YES)
+        self.clear_btn = ttk.Button(self.right_frame, text="Clear", command=self.on_clear_btn)
+        self.clear_btn.pack(side=TOP, anchor=W, fill=X, expand=YES, pady=2)
         
         # Commit Button
-        self.commit_btn = Button(self.right_frame, text="-", command=self.on_commit_btn)
-        self.commit_btn.pack(side=TOP, anchor=W, fill=X, expand=YES)
+        self.commit_btn = ttk.Button(self.right_frame, text="-", command=self.on_commit_btn)
+        self.commit_btn.pack(side=TOP, anchor=W, fill=X, expand=YES, pady=2)
  
         # Status Bar
         self.status_labelframe = LabelFrame(self, text="Status")
@@ -608,15 +608,13 @@ class Application(GenericFrame):
         self.element_entry.pack(side=LEFT, fill=X, expand=YES, pady=4, padx=4)
         self.default_color = self.element_entry.cget('background')
 
-        self.element_update = Button(self.element_frame, text="Update", command=self.on_update_element, state=DISABLED)
+        self.element_update = ttk.Button(self.element_frame, text="Update", command=self.on_update_element, state=DISABLED)
         self.element_update.pack(side=LEFT, fill=X, expand=YES, pady=4, padx=4)
-        self.element_cancel = Button(self.element_frame, text="Cancel", command=self.on_clear_element)
+        self.element_cancel = ttk.Button(self.element_frame, text="Cancel", command=self.on_clear_element)
         self.element_cancel.pack(side=LEFT, fill=X, expand=YES, pady=4, padx=4)
-        self.element_menubutton = Menubutton(self.element_frame, text="Alt Package", relief=RAISED)
+        self.element_menubutton = ttk.Menubutton(self.element_frame, text="Alt Package")
         self.element_menu = Menu(self.element_menubutton, tearoff=0)
         self.element_menubutton.configure(menu=self.element_menu)
-
-
 
 
 Config().parse_file()
@@ -626,6 +624,9 @@ root = Tk()
 root.title("Partlocater")
 root.iconbitmap(FAVICON)
 root.resizable(False, False)
+s=ttk.Style()
+s.theme_use('vista')
+#print (s.theme_names())
 app = Application(master=root)
 app.mainloop()
 try:

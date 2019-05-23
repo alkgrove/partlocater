@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from tkinter import *
+from tkinter import ttk
 import tkinter.font
 import os
 import platform
@@ -12,6 +13,7 @@ class AboutApplication(Frame):
     LOGO = "../assets/logo.gif"
     LED_ON = "../assets/ledon.gif"
     LED_OFF = "../assets/ledoff.gif"
+
     def annoyingLED(self):
         if self.ledstate:
             self.led.config(image=self.off)
@@ -20,6 +22,7 @@ class AboutApplication(Frame):
             self.led.config(image=self.on)
             self.ledstate = 1
         self.after(250, self.annoyingLED)
+
     def __init__(self, parent=None):
         Frame.__init__(self, parent)
         self.parent = parent
@@ -61,8 +64,10 @@ class AboutApplication(Frame):
         self.text.config(state=DISABLED)
         self.annoyingLED()
 
+
 class SystemInfoApplication(Frame):        
     FAVICON = "../assets/favicon.ico"
+
     def __init__(self, parent=None, cfg=None):
         Frame.__init__(self, parent)
         self.parent = parent
@@ -111,10 +116,11 @@ class SystemInfoApplication(Frame):
                     expired += " 1 minute"
                 else:
                     expired += " " + str(min) + " minutes"
-                self.text.insert(END, "\nLast Token: " + token_info['timestamp'].ctime() + 
-                    " Expires in " + expired, 'plain')
+                self.text.insert(END, "\nLast Token: " + token_info['timestamp'].ctime() +
+                                 " Expires in " + expired, 'plain')
             except Exception as e:
                 Config().log_write(e)
+
 
 class HelpApplication(Frame):
     FAVICON = "../assets/favicon.ico"
@@ -151,6 +157,6 @@ class HelpApplication(Frame):
                     self.text.insert(END,lines,self.tag)
             fp.close()
         except Exception as e:
-            self.text.insert(END,str(e))
+            self.text.insert(END, str(e))
         
 

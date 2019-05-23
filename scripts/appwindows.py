@@ -1,9 +1,10 @@
+
 from tkinter import *
-from tkinter import messagebox
+from tkinter import ttk, messagebox
 import tkinter.font
 from configReader import *
 from genericframe import *
-from tkinter.ttk import Treeview, Scrollbar, OptionMenu
+from tkinter.ttk import Treeview, Scrollbar, OptionMenu, Button
 import time
 import sys
 
@@ -81,10 +82,10 @@ class SearchApplication(GenericFrame):
 
         self.findF = Frame(self.searchLeftF)
         self.findF.pack(side=TOP, anchor=E)
-        self.findB = Button(self.findF, text="Find", width=6, command=lambda event=None: self.do_find(event))
+        self.findB = ttk.Button(self.findF, text="Find", width=6, command=lambda event=None: self.do_find(event))
         self.parent.bind("<Return>", self.do_find)
         self.findB.pack(side=LEFT, pady=4)
-        self.clearB = Button(self.findF, text="Clear", width=6, command=self.on_clear_search)
+        self.clearB = ttk.Button(self.findF, text="Clear", width=6, command=self.on_clear_search)
         self.clearB.pack(side=LEFT, pady=4)
 
         self.partsLF = LabelFrame(self, text="Found Components")
@@ -106,9 +107,9 @@ class SearchApplication(GenericFrame):
         self.partsTV.delete(*self.partsTV.get_children())
 
         self.partButtonF = Frame(self.partsLF)
-        self.deletePartB = Button(self.partsLF, text="Delete Part from Database", command=self.on_delete, state=DISABLED)
+        self.deletePartB = ttk.Button(self.partsLF, text="Delete Part from Database", command=self.on_delete, state=DISABLED)
         self.deletePartB.pack(side=RIGHT, anchor=W, expand=NO, pady=4, padx=6)
-        self.partsB = Button(self.partsLF, text="Copy Selected To Part Find", command=self.on_copy, state=DISABLED)
+        self.partsB = ttk.Button(self.partsLF, text="Copy Selected To Part Find", command=self.on_copy, state=DISABLED)
         self.partsB.pack(side=RIGHT, anchor=W, expand=NO, pady=4, padx=6)
         self.partButtonF.pack(side=BOTTOM)
         
@@ -125,9 +126,9 @@ class SearchApplication(GenericFrame):
         self.element_entry.pack(side=LEFT, fill=X, expand=YES, pady=4)
         self.default_color = self.element_entry.cget('background')
 
-        self.element_update = Button(self.element_frame, text="Update", command=self.on_update_element, state=DISABLED)
+        self.element_update = ttk.Button(self.element_frame, text="Update", command=self.on_update_element, state=DISABLED)
         self.element_update.pack(side=LEFT, fill=X, expand=YES, pady=4)
-        self.element_cancel = Button(self.element_frame, text="Cancel", command=self.on_clear_element, state=DISABLED)
+        self.element_cancel = ttk.Button(self.element_frame, text="Cancel", command=self.on_clear_element, state=DISABLED)
         self.element_cancel.pack(side=LEFT, fill=X, expand=YES, pady=4)
 
         self.statusLF = LabelFrame(self, text="Status")
@@ -363,9 +364,9 @@ class ManualAddApplication(GenericFrame):
 
         self.buttonframe = Frame(self.manualframe)
         self.buttonframe.pack(side=TOP, fill=X, expand=NO)
-        self.clearButton = Button(self.buttonframe, text="Clear", command=self.do_clear, state=ACTIVE, width=8)
+        self.clearButton = ttk.Button(self.buttonframe, text="Clear", command=self.do_clear, state=NORMAL, width=8)
         self.clearButton.pack(side=RIGHT, anchor=W, fill=X, expand=NO)
-        self.commitButton = Button(self.buttonframe, text="Add", command=self.do_commit, state=ACTIVE, width=8)
+        self.commitButton = ttk.Button(self.buttonframe, text="Add", command=self.do_commit, state=NORMAL, width=8)
         self.commitButton.pack(side=RIGHT, anchor=W, fill=X, expand=NO)
         self.statusFrame = LabelFrame(self, text="Status")
         self.statusFrame.pack(side=BOTTOM, fill=X, expand=YES, pady=4, padx=6)

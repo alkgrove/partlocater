@@ -1,6 +1,7 @@
 
 from tkinter import *
-from tkinter import font
+from tkinter import ttk, font
+from tkinter.ttk import Treeview, Scrollbar, OptionMenu, Button
 
 class GenericFrame(Frame):
     class StatusBar(Frame):

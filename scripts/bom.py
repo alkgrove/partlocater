@@ -1,6 +1,7 @@
 import os
 from tkinter import *
-from tkinter.ttk import OptionMenu
+from tkinter import ttk
+from tkinter.ttk import OptionMenu, Button
 from configReader import *
 from genericframe import *
 from partdb import *
@@ -25,7 +26,7 @@ class updateBOMApplication(GenericFrame):
         self.filename = StringVar()
         self.fileEntry = Entry(self.fileFrame, textvariable=self.filename, width=60)
         self.fileEntry.pack(side=LEFT, fill=X, expand=YES, pady=4, padx=4)
-        self.fileButton = Button(self.fileFrame, text="...", command=self.open_file, state=ACTIVE, width=3)
+        self.fileButton = ttk.Button(self.fileFrame, text="...", command=self.open_file, state=NORMAL, width=3)
         self.fileButton.pack(side=LEFT, anchor=W, fill=X, expand=NO)
 
         val = IntVar()
@@ -46,9 +47,9 @@ class updateBOMApplication(GenericFrame):
         self.buildLabel.pack(side=LEFT, fill=X, expand=NO, pady=4)
         self.buttonFrame = Frame(self.updateBOMFrame)
         self.buttonFrame.pack(side=TOP, fill=X, expand=NO, pady=4, padx=4)
-        self.clearButton = Button(self.buttonFrame, text="Clear", command=self.do_clear, state=ACTIVE, width=8)
+        self.clearButton = ttk.Button(self.buttonFrame, text="Clear", state=NORMAL, command=self.do_clear, width=8)
         self.clearButton.pack(side=RIGHT, anchor=W, fill=X, expand=NO)
-        self.updateButton = Button(self.buttonFrame, text="Update", command=self.do_update, state=ACTIVE, width=8)
+        self.updateButton = ttk.Button(self.buttonFrame, text="Update", state=NORMAL, command=self.do_update, width=8)
         self.updateButton.pack(side=RIGHT, anchor=W, fill=X, expand=NO)
         self.statusFrame = LabelFrame(self, text="Status")
         self.statusFrame.pack(side=BOTTOM, fill=X, expand=YES, pady=4, padx=6)

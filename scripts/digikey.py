@@ -97,12 +97,17 @@ def translate_part_json(data):
             minquantity = item['MinimumOrderQuantity']
             packaging = item['Packaging']['Value']
             spn = item['DigiKeyPartNumber']
-            if (minquantity > 1) or ('Digi-Reel' in packaging):
+            if 'Digi-Reel' in packaging:
+                dst[parameter['CustomPackaging']] = spn
+            elif (minquantity > 1):
+                print("Got SPN", spn)
                 altPackage[spn + " " + packaging + " (" + str(minquantity) + ")"] = spn
         hidden['MinimumOrderQuantity'] = data['PartDetails']['MinimumOrderQuantity']
         hidden['Packaging'] = data['PartDetails']['Packaging']['Value']
         if len(altPackage) > 0:
-            dst[parameter['AltPackaging']] = altPackage[[*altPackage.keys()][0]]
+            print("Got alt package",altPackage[[*altPackage.keys()][0]])
+            print("saved in", parameter['VolumePackaging'])
+            dst[parameter['VolumePackaging']] = altPackage[[*altPackage.keys()][0]]
         if 'Supplier Device Package' in dst:
             dst["Footprint Ref"] = dst['Supplier Device Package']
         elif 'Package / Case' in dst:
