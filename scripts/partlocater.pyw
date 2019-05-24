@@ -70,6 +70,7 @@ class Application(GenericFrame):
     ###############################
     ###       Exceptions        ###
     ###############################
+
     class EmptyField(Exception):
         def __init__(self, expression):
             self.expression = expression
@@ -81,69 +82,71 @@ class Application(GenericFrame):
     ###############################
     ###        Events           ###
     ###############################
+
     def handleError(self, title, e=""):
         self.status.seterror(title+" "+str(e))
         Config().log_write("ERROR: " + str(e))
         Config().log_write(traceback.format_exc())
 
     def close_search_window(self):
-        self.databaseMenu.entryconfig(self.search_index, state=NORMAL)
-        self.searchwindow.destroy()
+        self.database_menu.entryconfig(self.search_index, state=NORMAL)
+        self.search_window.destroy()
 
     def reset_hilite(self):
         for i in self.hiliteDict:
             self.hiliteDict[i] = 1
 
     def close_about_window(self):
-        self.aboutMenu.entryconfig(self.about_index, state=NORMAL)
-        self.aboutwindow.destroy()
+        self.about_menu.entryconfig(self.about_index, state=NORMAL)
+        self.about_window.destroy()
 
     def close_systeminfo_window(self):
-        self.aboutMenu.entryconfig(self.system_index, state=NORMAL)
-        self.systeminfowindow.destroy()
+        self.about_menu.entryconfig(self.system_index, state=NORMAL)
+        self.system_info_window.destroy()
 
     def close_help_window(self):
-        self.aboutMenu.entryconfig(self.help_index, state=NORMAL)
-        self.helpwindow.destroy()
+        self.about_menu.entryconfig(self.help_index, state=NORMAL)
+        self.help_window.destroy()
 
     def close_manual_add_window(self):
-        self.databaseMenu.entryconfig(self.manualadd_index, state=NORMAL)
-        self.manualaddwindow.destroy()
+        self.database_menu.entryconfig(self.manualadd_index, state=NORMAL)
+        self.manual_add_window.destroy()
 
     def close_BOM_window(self):
-        self.databaseMenu.entryconfig(self.update_BOM_index, state=NORMAL)
-        self.updateBOMwindow.destroy()
+        self.database_menu.entryconfig(self.update_BOM_index, state=NORMAL)
+        self.update_BOM_window.destroy()
      
     def on_manual_add(self):
-        self.manualaddwindow = Toplevel(self.master)
+        self.manual_add_window = Toplevel(self.master)
         Config().tables = Config().loaded_db.get_tables()
-        manualadd = ManualAddApplication(parent=self.manualaddwindow)
-        self.manualaddwindow.protocol("WM_DELETE_WINDOW", self.close_manual_add_window)
-        self.databaseMenu.entryconfig(self.manualadd_index, state=DISABLED)
+        manual_add = ManualAddApplication(parent=self.manual_add_window)
+        self.manual_add_window.protocol("WM_DELETE_WINDOW", self.close_manual_add_window)
+        self.database_menu.entryconfig(self.manualadd_index, state=DISABLED)
         return
 
     def on_about(self):
-        self.aboutwindow = Toplevel(self.master)
-        about = AboutApplication(parent=self.aboutwindow)
-        self.aboutwindow.protocol("WM_DELETE_WINDOW", self.close_about_window)
-        self.aboutMenu.entryconfig(self.about_index, state=DISABLED)
+        self.about_window = Toplevel(self.master)
+        about = AboutApplication(parent=self.about_window)
+        self.about_window.protocol("WM_DELETE_WINDOW", self.close_about_window)
+        self.about_menu.entryconfig(self.about_index, state=DISABLED)
         return
 
     def on_help(self):
-        self.helpwindow = Toplevel(self.master)
-        help = HelpApplication(parent=self.helpwindow)
-        self.helpwindow.protocol("WM_DELETE_WINDOW", self.close_help_window)
-        self.aboutMenu.entryconfig(self.help_index, state=DISABLED)
+        self.help_window = Toplevel(self.master)
+        help = HelpApplication(parent=self.help_window)
+        self.help_window.protocol("WM_DELETE_WINDOW", self.close_help_window)
+        self.about_menu.entryconfig(self.help_index, state=DISABLED)
         return
     
     def on_export(self):
         if not Config().loaded_db.export_cmd:
             return
-        str = Config().loaded_db.parseCommand(Config().loaded_db.export_cmd)
+        str = Config().loaded_db.parse_command(Config().loaded_db.export_cmd)
         if not str:
             self.status.set("Export Cancelled")
             return
-        Config().log_write("Export: %s"%str)        
+        fakestr = Config().loaded_db.parse_command(Config().loaded_db.export_cmd, True)
+        Config().log_write("Export: %s"%fakestr)        
         try:
             process = subprocess.Popen(str, shell=True, stderr=subprocess.PIPE)
             err = process.communicate()[1].decode('utf-8')
@@ -158,17 +161,19 @@ class Application(GenericFrame):
     def on_import(self):
         if not Config().loaded_db.import_cmd:
             return
-        if (Config().loaded_db.database_exists()):
+        if Config().loaded_db.database_exists():
             tables, rows = Config().loaded_db.get_count()
-            if (rows > 0):
-                if messagebox.askokcancel("Delete Existing Database", "Do you want to remove the existing database and replace it with the imported one?") == 0:
+            if rows > 0:
+                if messagebox.askokcancel("Delete Existing Database", "Do you want to remove the existing database and "
+                                                                      "replace it with the imported one?") == 0:
                     self.status.set("Import Cancelled")
                     return
-        str = Config().loaded_db.parseCommand(Config().loaded_db.import_cmd)
+        str = Config().loaded_db.parse_command(Config().loaded_db.import_cmd)
         if not str:
             self.status.set("Import Cancelled")
             return
-        Config().log_write("Import: %s"%str)        
+        fakestr = Config().loaded_db.parse_command(Config().loaded_db.export_cmd, True)
+        Config().log_write("Export: %s"%fakestr)        
         try:
             process = subprocess.Popen(str, shell=True, stderr=subprocess.PIPE)
             err = process.communicate()[1].decode('utf-8')
@@ -187,17 +192,17 @@ class Application(GenericFrame):
             try: 
                 token = mdb.get_latest_token()
                 ts = token['timestamp'].timestamp()
-                if (ts > maxts):
+                if ts > maxts:
                     maxmdb = mdb
                     maxtoken = token
                     maxts = ts
                 tokenlist.append((mdb, token))
-            except:
+            except Exception as e:
                 pass
         update = False
         # we update all databases except for the newest one
-        for mdb,token in tokenlist:
-            if (maxtoken['access_token'] != token['access_token']):
+        for mdb, token in tokenlist:
+            if maxtoken['access_token'] != token['access_token']:
                 try:
                     mdb.set_token(maxtoken);
                     self.status.set("Updating token to host: %s database: %s" % (mdb.host, mdb.name))
@@ -206,13 +211,12 @@ class Application(GenericFrame):
                     self.status.seterror("Update Token Failed: %s", e)
         if not update:
             self.status.set("No change, all tokens up to date")
-                   
-        
+
     def on_systeminfo(self):
-        self.systeminfowindow = Toplevel(self.master)
-        about = SystemInfoApplication(parent=self.systeminfowindow, cfg=Config())
-        self.systeminfowindow.protocol("WM_DELETE_WINDOW", self.close_systeminfo_window)
-        self.aboutMenu.entryconfig(self.system_index, state=DISABLED)
+        self.system_info_window = Toplevel(self.master)
+        about = SystemInfoApplication(parent=self.system_info_window, cfg=Config())
+        self.system_info_window.protocol("WM_DELETE_WINDOW", self.close_systeminfo_window)
+        self.about_menu.entryconfig(self.system_index, state=DISABLED)
         return
 
     def on_open_search(self):
@@ -220,11 +224,11 @@ class Application(GenericFrame):
             self.handleError("Search Failed", Exception("No database currently loaded!"))
             return
         Config().tables = Config().loaded_db.get_tables()
-        self.searchwindow = Toplevel(self.master)
-        self.searchwindow.resizable(False, False)
-        app = SearchApplication(parent=self.searchwindow, dbwindow=self)
-        self.searchwindow.protocol("WM_DELETE_WINDOW", self.close_search_window)
-        self.databaseMenu.entryconfig(self.search_index, state=DISABLED)
+        self.search_window = Toplevel(self.master)
+        self.search_window.resizable(False, False)
+        app = SearchApplication(parent=self.search_window, app_window=self)
+        self.search_window.protocol("WM_DELETE_WINDOW", self.close_search_window)
+        self.database_menu.entryconfig(self.search_index, state=DISABLED)
         return
 
     def on_update_BOM(self):
@@ -232,11 +236,11 @@ class Application(GenericFrame):
             self.handleError("Update BOM Failed.", Exception("No database currently loaded!"))
             return
         Config().tables = Config().loaded_db.get_tables()
-        self.updateBOMwindow = Toplevel(self.master)
-        self.updateBOMwindow.resizable(False, False)
-        app = updateBOMApplication(parent=self.updateBOMwindow)
-        self.updateBOMwindow.protocol("WM_DELETE_WINDOW", self.close_BOM_window)
-        self.databaseMenu.entryconfig(self.update_BOM_index, state=DISABLED)
+        self.update_BOM_window = Toplevel(self.master)
+        self.update_BOM_window.resizable(False, False)
+        app = UpdateBOMApplication(parent=self.update_BOM_window)
+        self.update_BOM_window.protocol("WM_DELETE_WINDOW", self.close_BOM_window)
+        self.database_menu.entryconfig(self.update_BOM_index, state=DISABLED)
           
     def on_disconnect(self):
         if Config().loaded_db is not None:
@@ -244,12 +248,12 @@ class Application(GenericFrame):
             self.status.set("Database %s Disconnected", Config().loaded_db.name)
             Config().loaded_db = None
             self.locate_btn.config(state=DISABLED)
-            self.databaseMenu.entryconfig(self.manualadd_index, state=DISABLED)            
-            self.databaseMenu.entryconfig(self.search_index, state=DISABLED)
-            self.databaseMenu.entryconfig(self.update_BOM_index, state=DISABLED)
-            self.databaseMenu.entryconfig(self.disconnect_index, state=DISABLED)
-            self.databaseMenu.entryconfig(self.export_index, state=DISABLED)
-            self.databaseMenu.entryconfig(self.import_index, state=DISABLED)
+            self.database_menu.entryconfig(self.manualadd_index, state=DISABLED)
+            self.database_menu.entryconfig(self.search_index, state=DISABLED)
+            self.database_menu.entryconfig(self.update_BOM_index, state=DISABLED)
+            self.database_menu.entryconfig(self.disconnect_index, state=DISABLED)
+            self.database_menu.entryconfig(self.export_index, state=DISABLED)
+            self.database_menu.entryconfig(self.import_index, state=DISABLED)
             self.dbselect.set("")
         if Config().loaded_metadb is not None:
             Config().loaded_metadb.close()
@@ -259,20 +263,20 @@ class Application(GenericFrame):
         self.on_disconnect()
         Config().load_database(database, meta_database)
         if Config().loaded_db.export_cmd is not None:
-            self.databaseMenu.entryconfig(self.export_index, state=NORMAL)
+            self.database_menu.entryconfig(self.export_index, state=NORMAL)
         try:
             Config().loaded_db.connect()
             self.status.set("Host %s Database %s Connected", Config().loaded_db.host, Config().loaded_db.name)
         except Exception as e:
             self.status.seterror("Failed to connect to Host %s Database %s. %s", Config().loaded_db.host, Config().loaded_db.name, e)
             return
-        self.databaseMenu.entryconfig(self.search_index, state=NORMAL)
-        self.databaseMenu.entryconfig(self.update_BOM_index, state=NORMAL)
-        self.databaseMenu.entryconfig(self.manualadd_index, state=NORMAL)            
-        self.databaseMenu.entryconfig(self.disconnect_index, state=NORMAL)
+        self.database_menu.entryconfig(self.search_index, state=NORMAL)
+        self.database_menu.entryconfig(self.update_BOM_index, state=NORMAL)
+        self.database_menu.entryconfig(self.manualadd_index, state=NORMAL)
+        self.database_menu.entryconfig(self.disconnect_index, state=NORMAL)
 
         if Config().loaded_db.import_cmd is not None:
-            self.databaseMenu.entryconfig(self.import_index, state=NORMAL)
+            self.database_menu.entryconfig(self.import_index, state=NORMAL)
         Config().log_write("Check Token")
         # get the latest token in the database
         try:
@@ -339,7 +343,6 @@ class Application(GenericFrame):
         for key in result[0]:
             self.loaded_parameters[key] = result[0][key]
 
-
     def on_locate_btn(self):
         alt_package = {}
         try:
@@ -353,8 +356,6 @@ class Application(GenericFrame):
             self.loaded_parameters, self.loaded_table, alt_package, self.hidden = translate_part_json(part_json)
         except Exception as e:
             self.handleError("Translation Error", e)
-            return
-        except self.EmptyField as e:
             return
         part_stat = ""
         try:
@@ -374,20 +375,19 @@ class Application(GenericFrame):
         if ('warnOnDigiReel' in Config().pref) and ('Digi-Reel' in self.hidden['Packaging']):
             part_stat += " Warning - Digireel Selected"
             self.status.setwarn("Found part %s%s", part_num, part_stat)
-            Config().log_write("%s part located warn on Digireel"%(part_num))
+            Config().log_write("%s part located warn on Digireel" % part_num)
         elif ('warnOnVolumePackaging' in Config().pref) and (self.hidden['MinimumOrderQuantity'] > 1):
             part_stat += " Warning - High Volume Packaging Selected"
             self.status.setwarn("Found part %s%s", part_num, part_stat)
-            Config().log_write("%s part located warn on high volume packaging (ie Tape/Reel)"%(part_num))
+            Config().log_write("%s part located warn on high volume packaging (ie Tape/Reel)" % part_num)
         else:
             self.status.set("Found part %s%s", part_num, part_stat)
         self.part_label.set("Part Info: %s" % part_num)
         self.update_part_info(self.loaded_parameters)
-        self.element_menu.delete(0,'end')
+        self.element_menu.delete(0, 'end')
         for item in alt_package.keys():
-            self.element_menu.add_radiobutton(variable=self.element_value, value = alt_package[item], label=item)
+            self.element_menu.add_radiobutton(variable=self.element_value, value=alt_package[item], label=item)
 
-         
     def on_update_element(self):
         if self.current_selection is None:
             return
@@ -400,13 +400,13 @@ class Application(GenericFrame):
         self.loaded_parameters[item_name] = new_item_value
         self.on_clear_element()
         self.status.set("%s updated", item_name)
-        if (item_name in self.hiliteDict):
+        if item_name in self.hiliteDict:
             self.hiliteDict[item_name] = 0
         self.update_part_info(self.loaded_parameters)
 
     def do_flash(self):
         current_color = self.element_entry.cget("background")
-        if (current_color == self.default_color):
+        if current_color == self.default_color:
             self.element_entry.config(background="red")
         else:
             self.element_entry.config(background=self.default_color)
@@ -429,7 +429,8 @@ class Application(GenericFrame):
         
         # first we check if it has been updated or first selection or
         # we check if the last selected item value and the value in the text entry has changed
-        if self.current_selection is None or self.part_info_tree.item(self.current_selection, "values")[1] == current_value:
+        if self.current_selection is None or self.part_info_tree.item(self.current_selection, "values")[1] \
+                == current_value:
             # no old stuff to update, so update the modify fields and set the new current_selection
             value = self.part_info_tree.item(new_selection, "values")[1]
             self.element_name.set(key)
@@ -445,6 +446,7 @@ class Application(GenericFrame):
     ###############################
     ###    GUI Functionality    ###
     ###############################
+
     def get_part_num_field(self):
         part_id = self.part_num_string.get().strip()
         if not (validate(part_id)): 
@@ -458,23 +460,23 @@ class Application(GenericFrame):
         if len(dict) > 0:
             for k, v in dict.items():
                 if k in self.hiliteDict and self.hiliteDict[k]:
-                    self.part_info_tree.insert('', 'end', iid=k, text=k, values=(k, v), tags=('hilite','boldfont'))
+                    self.part_info_tree.insert('', 'end', iid=k, text=k, values=(k, v), tags=('hilite', 'boldfont'))
                 else:
                     self.part_info_tree.insert('', 'end', iid=k, text=k, values=(k, v))
 
 
     def on_copy_element(self, event):
         try:
-            list=[]
+            list = []
             for selected in self.part_info_tree.selection():
-                value = self.part_info_tree.item(selected,"values")[1]
-                list.append((selected,value))
+                value = self.part_info_tree.item(selected, "values")[1]
+                list.append((selected, value))
             self.clipboard_clear()
             for items in list:
-                self.clipboard_append("%s\t%s\n"%items)
+                self.clipboard_append("%s\t%s\n" % items)
             self.update()
             if len(list) == 1:
-                self.status.set("%s:  %s Copied to Clipboard"%list[0])
+                self.status.set("%s:  %s Copied to Clipboard" % list[0])
             elif len(list) > 1:
                 self.status.set("Selected Items Copied to Clipboard")
         except Exception as e:
@@ -485,11 +487,10 @@ class Application(GenericFrame):
             self.part_info_tree.selection_remove(item)
         self.on_clear_element()
         self.status.set("")
+
     ###############################
     ###           GUI           ###
     ###############################
-
-
 
     def create_widgets(self):
         global config
@@ -510,39 +511,41 @@ class Application(GenericFrame):
         self.element_frame.pack(side=TOP)
 
         self.menubar = Menu(self)
-        self.databaseMenu = Menu(self.menubar, tearoff=0)
-        self.databaseListMenu = Menu(self.databaseMenu, tearoff=0)
-        self.databaseMenu.add_cascade(label="Connect to", menu=self.databaseListMenu)
+        self.database_menu = Menu(self.menubar, tearoff=0)
+        self.databaseListMenu = Menu(self.database_menu, tearoff=0)
+        self.database_menu.add_cascade(label="Connect to", menu=self.databaseListMenu)
         self.dbselect = StringVar()
         for db,mdb in Config().db_list:
-            self.databaseListMenu.add_radiobutton(variable=self.dbselect, value = db.id, label=db.id + " (" + db.host + " " + db.name + ")", command=lambda db=db, mdb=mdb: self.on_connect(db,mdb))
-        self.databaseMenu.add_command(label="Disconnect", state=DISABLED, command=lambda : self.on_disconnect())
+            self.databaseListMenu.add_radiobutton(variable=self.dbselect, value=db.id,
+                                                  label=db.id + " (" + db.host + " " + db.name + ")",
+                                                  command=lambda db=db, mdb=mdb: self.on_connect(db, mdb))
+        self.database_menu.add_command(label="Disconnect", state=DISABLED, command=lambda: self.on_disconnect())
         self.disconnect_index = 1
-        self.databaseMenu.add_separator()
-        self.databaseMenu.add_command(label="Search Database", state=DISABLED, command=lambda : self.on_open_search())
+        self.database_menu.add_separator()
+        self.database_menu.add_command(label="Search Database", state=DISABLED, command=lambda: self.on_open_search())
         self.search_index = 3
-        self.databaseMenu.add_command(label="Manual Add", state=DISABLED, command=lambda : self.on_manual_add())
+        self.database_menu.add_command(label="Manual Add", state=DISABLED, command=lambda: self.on_manual_add())
         self.manualadd_index = 4
-        self.databaseMenu.add_command(label="Sync Tokens", state=DISABLED, command=lambda : self.on_sync_token())
+        self.database_menu.add_command(label="Sync Tokens", state=DISABLED, command=lambda: self.on_sync_token())
         self.sync_token_index = 5
-        if (len(Config().db_list) > 1):
-            self.databaseMenu.entryconfig(self.sync_token_index, state=NORMAL)
-        self.databaseMenu.add_command(label="Export", state=DISABLED, command=lambda : self.on_export())
+        if len(Config().db_list) > 1:
+            self.database_menu.entryconfig(self.sync_token_index, state=NORMAL)
+        self.database_menu.add_command(label="Export", state=DISABLED, command=lambda: self.on_export())
         self.export_index = 6
-        self.databaseMenu.add_command(label="Import", state=DISABLED, command=lambda : self.on_import())
+        self.database_menu.add_command(label="Import", state=DISABLED, command=lambda: self.on_import())
         self.import_index = 7
-        self.databaseMenu.add_command(label="Update BOM...", state=DISABLED, command=lambda : self.on_update_BOM())
+        self.database_menu.add_command(label="Update BOM...", state=DISABLED, command=lambda: self.on_update_BOM())
         self.update_BOM_index = 8
-        self.databaseMenu.add_command(label="Quit", command=root.quit);
-        self.menubar.add_cascade(label="File", menu=self.databaseMenu)
-        self.aboutMenu = Menu(self.menubar, tearoff=0)
-        self.aboutMenu.add_command(label="About", command = lambda:self.on_about())
+        self.database_menu.add_command(label="Quit", command=root.quit)
+        self.menubar.add_cascade(label="File", menu=self.database_menu)
+        self.about_menu = Menu(self.menubar, tearoff=0)
+        self.about_menu.add_command(label="About", command=lambda:self.on_about())
         self.about_index = 0
-        self.aboutMenu.add_command(label="System", command = lambda:self.on_systeminfo())
+        self.about_menu.add_command(label="System", command=lambda:self.on_systeminfo())
         self.system_index = 1
-        self.aboutMenu.add_command(label="Help", command = lambda:self.on_help())
+        self.about_menu.add_command(label="Help", command=lambda:self.on_help())
         self.help_index = 2
-        self.menubar.add_cascade(label="Help", menu=self.aboutMenu)
+        self.menubar.add_cascade(label="Help", menu=self.about_menu)
         root.config(menu=self.menubar)
 
         # Part Number Entry Field
@@ -624,7 +627,7 @@ root = Tk()
 root.title("Partlocater")
 root.iconbitmap(FAVICON)
 root.resizable(False, False)
-s=ttk.Style()
+s = ttk.Style()
 s.theme_use('vista')
 #print (s.theme_names())
 app = Application(master=root)

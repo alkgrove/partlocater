@@ -8,8 +8,7 @@ from datetime import datetime
 ###   Config File Reading   ###
 ###############################
 
-
-class singleton(object):
+class Singleton(object):
     instances = {}
 
     def __init__(self, cls):
@@ -27,18 +26,20 @@ class singleton(object):
         return setattr(self.__dict__['cls'], attr, value)
 
 
-@singleton
+@Singleton
 class Config:
     CFG_ENV_VAR = "PARTLOCATER_CFG"
     MAP_FILENAME = "../assets/map.cfg"
     TS_FORMAT = "%d/%m/%y %H:%M:%S "
-    REVISION = "v1.0-beta"
+    REVISION = "v1.0.1-beta"
+
     def __init__(self):
         self.loaded_db = None
         self.loaded_metadb = None
         self.client_id = None
         self.client_secret = None
         self.customer_id = None
+        self.redirect_uri = None
         self.cfg_file = None
         self.map_file = None
         self.db_list = []
@@ -89,7 +90,7 @@ class Config:
         for entry in config.sections():
             if entry[0:8] == "database":
                 db_dict = dict(config.items(entry))
-                if not validateIdentifier(db_dict['database']):
+                if not validate_identifier(db_dict['database']):
                     raise "Bad database name - must be identifier"
                 self.db_list.append([MariaDB(database_id=entry, host=db_dict['host'], user=db_dict['username'],
                                              password=db_dict['password'], database_name=db_dict['database']),
@@ -121,15 +122,15 @@ class Config:
                 self.libref = dict(mapconfig.items(entry))
             if entry == "BOM":
                 self.bom = dict(mapconfig.items(entry))
-        if ('log' in self.pref):
+        if 'log' in self.pref:
             self.log_filename = self.pref['log']
             self.log_write("---------- Application Started")
             self.log_write("Config File %s", self.cfg_filename)
             for db in self.db_list:
                 self.log_write("ID %s Host %s User %s Database %s", db[0].id, db[0].host, db[0].user, db[0].name)
             for item in self.library.values():
-                if not validateIdentifier(item):
-                    self.log_write("In map.cfg library section, %s is an invalid identifier "%item)
+                if not validate_identifier(item):
+                    self.log_write("In map.cfg library section, %s is an invalid identifier " % item)
                     exit()
 
     def get_client_id(self):
@@ -151,8 +152,8 @@ class Config:
         self.loaded_db.add_columns(table, data_dict)
         query_string = "UPDATE `" + table + "` SET " + ",".join(
             ["`" + str(k) + "`='" + str(v) + "'" for (k, v) in list(data_dict.items())]) + " WHERE `" + \
-                       self.parameter['DigiKeyPartNumber'] + "`='" + data_dict[
-                           self.parameter['DigiKeyPartNumber']] + "'"
+                       self.parameter['DigiKeyPartNumber'] + "`='" \
+                       + data_dict[self.parameter['DigiKeyPartNumber']] + "'"
         self.loaded_db.query(query_string)
 
     def insert_part(self, table, data_dict):
@@ -167,6 +168,6 @@ class Config:
         return rv
 
     def log_write(self, format, *args):
-        if (self.log_filename is not None):
+        if self.log_filename is not None:
             with open(self.log_filename, 'a') as f:
-                f.write(datetime.now().strftime(self.TS_FORMAT) + str(format) % args + "\n");
+                f.write(datetime.now().strftime(self.TS_FORMAT) + str(format) % args + "\n")

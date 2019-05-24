@@ -7,7 +7,6 @@ from datetime import datetime
 ###    Digikey Parts API    ###
 ###############################
 
-
 def digikey_get_part(part_id):
     # Get part information from source site given a specified part ID.
     if Config().access_token_string is None:
@@ -33,6 +32,7 @@ def digikey_get_part(part_id):
         raise Exception(r['Details'])
     return response.text
 
+
 def is_token_old(token):
     timestamp = token['timestamp']
     expires = token['expires_in']
@@ -41,6 +41,7 @@ def is_token_old(token):
         return True
     else:
         return False
+
 
 def digikey_get_new_token(refresh_token):
     headers = {
@@ -67,7 +68,7 @@ def translate_part_json(data):
     libref = Config().libref
     dst = dict()
     hidden = dict()
-    indirectForm = re.compile(r"\='([\w\s]+)'")
+    indirect_form = re.compile(r"\='([\w\s]+)'")
     try:
         table_name = library[data['PartDetails']['Category']['Text']]
     except KeyError:
@@ -92,26 +93,23 @@ def translate_part_json(data):
         dst[parameter['ManufacturerName']] = data['PartDetails']['ManufacturerName']['Text']
         dst[parameter['QuantityOnHand']] = data['PartDetails']['QuantityOnHand']
         dst["Supplier 1"] = "Digi-Key"
-        altPackage = {}
+        alt_package = {}
         for item in data['PartDetails']['AlternatePackaging']:
-            minquantity = item['MinimumOrderQuantity']
+            min_quantity = item['MinimumOrderQuantity']
             packaging = item['Packaging']['Value']
             spn = item['DigiKeyPartNumber']
             if 'Digi-Reel' in packaging:
                 dst[parameter['CustomPackaging']] = spn
-            elif (minquantity > 1):
-                print("Got SPN", spn)
-                altPackage[spn + " " + packaging + " (" + str(minquantity) + ")"] = spn
+            elif min_quantity > 1:
+                alt_package[spn + " " + packaging + " (" + str(min_quantity) + ")"] = spn
         hidden['MinimumOrderQuantity'] = data['PartDetails']['MinimumOrderQuantity']
         hidden['Packaging'] = data['PartDetails']['Packaging']['Value']
-        if len(altPackage) > 0:
-            print("Got alt package",altPackage[[*altPackage.keys()][0]])
-            print("saved in", parameter['VolumePackaging'])
-            dst[parameter['VolumePackaging']] = altPackage[[*altPackage.keys()][0]]
+        if len(alt_package) > 0:
+            dst[parameter['VolumePackaging']] = alt_package[[*alt_package.keys()][0]]
         if 'Supplier Device Package' in dst:
             dst["Footprint Ref"] = dst['Supplier Device Package']
         elif 'Package / Case' in dst:
-           dst["Footprint Ref"] = dst['Package / Case']
+            dst["Footprint Ref"] = dst['Package / Case']
         else:
             dst["Footprint Ref"] = "*"
         cat = dst['Category']
@@ -119,9 +117,9 @@ def translate_part_json(data):
             dst["Library Ref"] = ""
         else:
             ref = libref[cat]   
-            indirectMatch = re.match(indirectForm, ref)
-            if indirectMatch is not None:
-                dst["Library Ref"] = dst[indirectMatch.group(1)]
+            indirect_match = re.match(indirect_form, ref)
+            if indirect_match is not None:
+                dst["Library Ref"] = dst[indirect_match.group(1)]
             else:
                 dst["Library Ref"] = ref
         dst["Base Part Number"] = data['PartDetails']['ManufacturerPartNumber']
@@ -132,4 +130,4 @@ def translate_part_json(data):
             dst[incl] = include[incl]
     except KeyError as e:
         raise Exception("Failed to load all part fields."+str(e))
-    return dst, table_name, altPackage, hidden
+    return dst, table_name, alt_package, hidden

@@ -1,7 +1,6 @@
 
 from tkinter import *
-from tkinter import ttk, font
-from tkinter.ttk import Treeview, Scrollbar, OptionMenu, Button
+from tkinter import font
 
 class GenericFrame(Frame):
     class StatusBar(Frame):
@@ -9,10 +8,10 @@ class GenericFrame(Frame):
             parent.update()
             self.label = Label(frame, anchor=W, wraplength=parent.winfo_width()-1, justify=LEFT, bd=1, relief=FLAT)
             self.label.pack(side=LEFT, anchor=W, fill=X, expand=YES, pady=4)
-            self.defaultfont = font.Font(font=self.label['font'])
+            self.default_font = font.Font(font=self.label['font'])
 
         def set(self, format, *args):
-            self.label.config(font=self.defaultfont, foreground="black", text=format % args)
+            self.label.config(font=self.default_font, foreground="black", text=format % args)
             self.label.config(text=format % args)
             self.label.update_idletasks()
 

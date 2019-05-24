@@ -4,9 +4,10 @@ from tkinter import filedialog
 import json
 import re
 
+
 def validate(str):
     pattern = re.compile(r'[\'\"\`]')
-    if (isinstance(str, list)):
+    if isinstance(str, list):
         for item in str:
             if pattern.findall(item) != []:
                 return False
@@ -14,20 +15,25 @@ def validate(str):
     else:
         return True if pattern.findall(str) == [] else False
 
-def validateIdentifier(str):
+
+def validate_identifier(string):
     pattern = re.compile('^[a-zA-Z][a-zA-Z0-9_]*$')
-    return True if pattern.findall(str) else False
-    
-def sanitize(str):
-    pattern = re.compile('[`\]\[;\(\)\'\"+]`')
-    str = pattern.sub('', str)
-    return str
+    return True if pattern.findall(string) else False
+
+
+def sanitize(string):
+    pattern = re.compile('[`\\]\\[;\\(\\)\'\"+]`')
+    string = pattern.sub('', string)
+    return string
 
 ###############################
 ###     Parts Database     ###
 ###############################
+
+
 class MariaDB:
     SAVED_TOKENS = 5
+
     def __init__(self, database_id, host, user, password, database_name):
         self.id = database_id
         self.host = host
@@ -56,7 +62,8 @@ class MariaDB:
         try:
             connector = maria_db.connect(host=self.host, user=self.user, passwd=self.password)
             my_cursor = connector.cursor(dictionary=True)
-            my_cursor.execute("SELECT VARIABLE_VALUE FROM `information_schema`.GLOBAL_VARIABLES WHERE VARIABLE_NAME = 'INNODB_VERSION'")
+            my_cursor.execute("SELECT VARIABLE_VALUE FROM `information_schema`.GLOBAL_VARIABLES WHERE VARIABLE_"
+                              "NAME = 'INNODB_VERSION'")
             rv = my_cursor.fetchall()
             connector.close()
             return rv[0]['VARIABLE_VALUE']
@@ -72,7 +79,7 @@ class MariaDB:
             my_cursor.execute(query, vars)
             try:
                 my_result = my_cursor.fetchall()
-            except Exception:
+            except Exception as e:
                 self.connector.commit()
                 return None
             else:
@@ -98,21 +105,20 @@ class MariaDB:
             my_cursor = connector.cursor(dictionary=True)
             my_cursor.execute("SELECT SUM(TABLE_ROWS) FROM `information_schema`.TABLES WHERE TABLE_SCHEMA = %s", (self.name, ))
             rows = my_cursor.fetchall()[0]['SUM(TABLE_ROWS)']
-            if (rows is None):
+            if rows is None:
                 rows = 0
             my_cursor.execute("SELECT COUNT(TABLE_NAME) FROM `information_schema`.TABLES WHERE TABLE_SCHEMA = %s", (self.name, ))
             tables = my_cursor.fetchall()[0]['COUNT(TABLE_NAME)']
-            if (tables is None):
+            if tables is None:
                 tables = 0
             connector.close()
             return [tables, rows]
         except Exception as e:
             raise e
-
-
     ###############################
     ###     Query Wrappers      ###
     ###############################
+
     def add_columns(self, table, part_dict):
         table_col = list(part_dict.keys())
         db_columns = self.query("SHOW COLUMNS FROM `" + table + "`")
@@ -128,10 +134,11 @@ class MariaDB:
         try:
             connector = maria_db.connect(host=self.host, user=self.user, passwd=self.password)
             my_cursor = connector.cursor(dictionary=True)
-            my_cursor.execute("SELECT * FROM `information_schema`.TABLES WHERE TABLE_SCHEMA = %s AND TABLE_NAME = %s", (self.name,table))
+            my_cursor.execute("SELECT * FROM `information_schema`.TABLES WHERE TABLE_SCHEMA = %s AND TABLE_NAME = %s",
+                              (self.name, table))
             rv = len(my_cursor.fetchall())
             connector.close()     
-            if (rv > 0):
+            if rv > 0:
                 return True
             else:
                 return False 
@@ -145,7 +152,7 @@ class MariaDB:
             my_cursor.execute("SELECT * FROM `information_schema`.SCHEMATA WHERE SCHEMA_NAME = %s", (self.name,))
             rv = len(my_cursor.fetchall())
             connector.close()     
-            if (rv > 0):
+            if rv > 0:
                 return True
             else:
                 return False 
@@ -162,22 +169,23 @@ class MariaDB:
         except Exception as e:
             raise e
   
-    def get_priceinfo(self, tables, viewdb, supplier, partlist):
+    def get_priceinfo(self, tables, view_db, supplier, part_list):
         result = []
         try:
             connector = maria_db.connect(host=self.host, user=self.user, passwd=self.password)
             my_cursor = connector.cursor(dictionary=True)
-            pricelist = "`" + viewdb + "`.pricelist"
-            qry = "CREATE VIEW " + pricelist + " AS "
-            qry += " UNION ".join("(SELECT `Supplier Part Number 1`,`Supplier Stock 1`,`Pricing 1` FROM %s.%s WHERE `Supplier 1` = '%s')"%(self.name, table, supplier) for table in tables)
+            price_list = "`" + view_db + "`.price_list"
+            qry = "CREATE VIEW " + price_list + " AS "
+            qry += " UNION ".join("(SELECT `Supplier Part Number 1`,`Supplier Stock 1`,`Pricing 1` FROM %s.%s WHERE "
+                                  "`Supplier 1` = '%s')"%(self.name, table, supplier) for table in tables)
             my_cursor.execute(qry)
             connector.commit()
-            qry = "SELECT * FROM " + pricelist + " WHERE `Supplier Part Number 1` IN ('"
-            qry += "','".join(part[0] for part in partlist)
+            qry = "SELECT * FROM " + price_list + " WHERE `Supplier Part Number 1` IN ('"
+            qry += "','".join(part[0] for part in part_list)
             qry += "')"
             my_cursor.execute(qry)
             rv = my_cursor.fetchall()
-            my_cursor.execute("DROP VIEW " + pricelist)
+            my_cursor.execute("DROP VIEW " + price_list)
             connector.commit()
             for r in rv:
                 result.append(r)
@@ -189,8 +197,9 @@ class MariaDB:
         try:
             connector = maria_db.connect(host=self.host, user=self.user, passwd=self.password)
             my_cursor = connector.cursor(dictionary=True)
-            tablename = "`" + self.name + "`.`" + table + "`"
-            my_cursor.execute("UPDATE " + tablename + " SET `Pricing 1` = '%s', `Supplier Stock 1` = '%s' WHERE `Supplier Part Number 1` = '%s'", pricing, str(stock), part)
+            table_name = "`" + self.name + "`.`" + table + "`"
+            my_cursor.execute("UPDATE " + table_name + " SET `Pricing 1` = '%s', `Supplier Stock 1` = '%s' WHERE "
+                                                       "`Supplier Part Number 1` = '%s'", pricing, str(stock), part)
             connector.commit()
             connector.close()
         except Exception as e:
@@ -213,7 +222,7 @@ class MariaDB:
             cursor = connector.cursor(dictionary=True)
             cursor.execute("SELECT count(*) FROM Token")
             count = cursor.fetchall()[0]['count(*)'] - (self.SAVED_TOKENS - 1)
-            if (count > 0):
+            if count > 0:
                 cursor.execute("DELETE FROM Token ORDER BY timestamp ASC LIMIT %s", (count,))
                 connector.commit() 
             query = (
@@ -226,24 +235,28 @@ class MariaDB:
         except Exception as e:
             raise Exception("Unable to set token", e)
     
-    def parseCommand(self, str):
+    def parse_command(self, string, hide=False):
         now = datetime.now()
-        str = re.sub(r'\%\(date\)', now.strftime("%m%d%Y"),str)
-        str = re.sub(r'\%\(time\)', now.strftime("%H%M"),str)
-        str = re.sub(r'\%\(database\)', self.name, str)
-        str = re.sub(r'\%\(username\)', self.user, str)
-        str = re.sub(r'\%\(password\)', self.password, str)
-        str = re.sub(r'\%\(host\)', self.host, str)
-        if (re.search(r'\%\(openfile\)', str)):
-            infile = filedialog.askopenfilename(initialdir = ".",title = "Open .sql file",filetypes = (("sql files","*.sql"),("all files","*.*")))
+        if (string[0] == '"' and string[-1] == '"') or (string[0] == "'" and string[-1] == "'"):
+            string = string[1:-1]            
+        string = re.sub(r'\%\(date\)', now.strftime("%m%d%Y"), string)
+        string = re.sub(r'\%\(time\)', now.strftime("%H%M"), string)
+        string = re.sub(r'\%\(database\)', self.name, string)
+        string = re.sub(r'\%\(username\)', self.user, string)
+        string = re.sub(r'\%\(password\)', self.password if not hide else "xxxxxxxx", string)
+        string = re.sub(r'\%\(host\)', self.host, string)
+        if re.search(r'\%\(openfile\)', string):
+            infile = filedialog.askopenfilename(initialdir=".", title="Open .sql file", filetypes=
+                (("sql files", "*.sql"), ("all files", "*.*")))
             if not infile:
                 return None
-            str = re.sub(r'\%\(openfile\)', '"' + infile + '"', str)
-        if (re.search(r'\%\(savefile\)', str)):
-            outfile = filedialog.asksaveasfilename(initialdir = ".",title = "Save database",filetypes = (("sql file","*.sql"),("all files","*.*")))
+            string = re.sub(r'\%\(openfile\)', '"' + infile + '"', string)
+        if re.search(r'\%\(savefile\)', string):
+            outfile = filedialog.asksaveasfilename(initialdir=".", title="Save database", filetypes=
+                (("sql file", "*.sql"), ("all files", "*.*")))
             if not outfile:
                 return ""
             if not outfile.lower().endswith('.sql'):
                 outfile += '.sql'
-            str = re.sub(r'\%\(savefile\)', '"'+ outfile + '"', str)
-        return str
+            string = re.sub(r'\%\(savefile\)', '"' + outfile + '"', string)
+        return string
