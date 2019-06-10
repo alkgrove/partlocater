@@ -29,7 +29,13 @@ def digikey_get_part(part_id):
 
     if response.status_code != 200:
         r = json.loads(response.text)
-        raise Exception(r['Details'])
+        if 'Details' in r:
+            s = r['Details']
+        elif 'moreInformation' in r:
+            s = r['moreInformation']
+        else:
+            s = 'Unknown Response from Digi-Key'
+        raise Exception(s)
     return response.text
 
 
