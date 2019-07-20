@@ -67,6 +67,14 @@ class Application(GenericFrame):
         self.current_selection = None
         self.hidden = {}
         self.hiliteDict = {'Library Ref':1, 'Footprint Ref':1, 'Base Part Number':1}
+        db_count = len(Config().db_list)
+        if (db_count == 1):
+            db, mdb = Config().db_list[0]
+            self.on_connect(db, mdb)
+        elif (db_count > 1):
+            self.on_open_database()
+        else:
+            self.status.seterror("No databases defined in partlocater.cfg")
     ###############################
     ###       Exceptions        ###
     ###############################
@@ -103,6 +111,9 @@ class Application(GenericFrame):
     def close_systeminfo_window(self):
         self.about_menu.entryconfig(self.system_index, state=NORMAL)
         self.system_info_window.destroy()
+
+    def close_database_window(self):
+        self.database_window.destroy()
 
     def close_help_window(self):
         self.about_menu.entryconfig(self.help_index, state=NORMAL)
@@ -229,6 +240,13 @@ class Application(GenericFrame):
         app = SearchApplication(parent=self.search_window, app_window=self)
         self.search_window.protocol("WM_DELETE_WINDOW", self.close_search_window)
         self.database_menu.entryconfig(self.search_index, state=DISABLED)
+        return
+
+    def on_open_database(self):
+        self.database_window = Toplevel(self.master)
+        self.database_window.resizable(False, False)
+        app = OpenDatabasePopup(parent=self.database_window, app_window=self)
+        self.database_window.protocol("WM_DELETE_WINDOW", self.database_window.destroy)
         return
 
     def on_update_BOM(self):

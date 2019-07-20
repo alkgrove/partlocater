@@ -420,3 +420,33 @@ class ManualAddApplication(GenericFrame):
         self.propvalue[self.CATEGORY_INDEX].set(value)
         self.cat_entry.config(state=DISABLED)
         self.status.set("Category Set - add part information the click add")
+
+class OpenDatabasePopup(GenericFrame):
+    FAVICON = "../assets/favicon.ico"
+
+    def __init__(self, parent=None, app_window=None):
+        Frame.__init__(self, parent)
+        self.parent = parent
+        self.app_window = app_window
+        self.parent.title("Partlocater - Open Database")
+
+        self.parent.attributes("-toolwindow", 1)
+        self.parent.iconbitmap(self.FAVICON)
+        self.parent.grab_set_global()
+        self.database_frame = LabelFrame(self, text="Select Database")
+        self.database_frame.pack(side=TOP, fill=BOTH, expand=YES, pady=10, padx=10)
+        for db,mdb in Config().db_list:
+            self.database_btn = ttk.Button(self.database_frame, text=db.id + " (" + db.host + " " + db.name + ")", command=lambda db=db, mdb=mdb: self.select_database(db, mdb))
+            self.database_btn.pack(side=TOP, anchor=W, fill=X, expand=YES, pady=2, padx=5)
+        self.cancel = ttk.Button(self.database_frame, text="Cancel", command=self.on_cancel, state=NORMAL)
+        self.cancel.pack(side=LEFT, fill=X, expand=YES, pady=2, padx=5)
+        
+        self.pack(side=LEFT, fill=BOTH, expand=YES)
+
+    def select_database(self, database, meta_database):
+        self.app_window.on_connect(database, meta_database)
+        self.app_window.database_window.destroy()
+    
+    def on_cancel(self):
+        self.app_window.status.set("Database not connected - use File->Connect To... to connect to database")
+        self.app_window.database_window.destroy()
