@@ -14,4 +14,5 @@ So for local usage, I recommend XAMPP. XAMPP contains apache, php, cURL and Mari
 
 This was intended to work for either single engineer or a small group. It can work from a single workstation or to a local server. 
 
- 
+ v1.0.4-beta Added a popup database selector if there is more than one database and errors if there are no databases. If there is one database it will automatically open on startup. 
+
