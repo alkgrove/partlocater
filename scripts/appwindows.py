@@ -333,8 +333,9 @@ class SearchApplication(GenericFrame):
 class ManualAddApplication(GenericFrame):
     FAVICON = "../assets/favicon.ico"
     PROPLIST = ['Category', 'Manufacturer', 'Manufacturer Part Number',
-                'Supplier 1', 'Supplier Part Number 1', 'Description', 'Footprint Ref',
+                'Supplier 1', 'Supplier Part Number 1', 'Description', 'Cost', 'Footprint Ref',
                 'Library Ref']
+                
     CATEGORY_INDEX = 0
     SPN_INDEX = 4
 
@@ -349,7 +350,6 @@ class ManualAddApplication(GenericFrame):
         self.manual_frame.pack(side=TOP, fill=BOTH, expand=YES, pady=4, padx=4)
         self.prop_frame = []
         self.propvalue = []
-        self.PROPLIST += Config().include
         for item in self.PROPLIST:
             self.prop_frame.append(Frame(self.manual_frame))
             self.prop_frame[-1].pack(side=TOP, fill=X, expand=YES)
@@ -359,9 +359,12 @@ class ManualAddApplication(GenericFrame):
             if item != "Category":
                 prop_entry = Entry(self.prop_frame[-1], textvariable=self.propvalue[-1], state=NORMAL, width=30)
                 prop_entry.pack(side=LEFT, fill=X, expand=YES, pady=4, padx=4)
+                self.propvalue[-1].trace("w", self.check_minentry)
             else:
                 self.cat_entry = Entry(self.prop_frame[-1], textvariable=self.propvalue[-1], state=DISABLED, width=40)
                 self.cat_entry.pack(side=LEFT, fill=X, expand=YES, pady=4, padx=4)
+                if (item.startswith("Manufacturer")): 
+                    self.propvalue[-1].trace("w", self.check_minentry)
                 self.cat_option = StringVar()
                 table_list = ['Capacitors'] + Config().tables
                 cat_menu = OptionMenu(self.prop_frame[-1], self.cat_option, *table_list, command=self.on_category)
@@ -371,7 +374,7 @@ class ManualAddApplication(GenericFrame):
         self.button_frame.pack(side=TOP, fill=X, expand=NO)
         self.clear_button = ttk.Button(self.button_frame, text="Clear", command=self.do_clear, state=NORMAL, width=8)
         self.clear_button.pack(side=RIGHT, anchor=W, fill=X, expand=NO)
-        self.commit_button = ttk.Button(self.button_frame, text="Add", command=self.do_commit, state=NORMAL, width=8)
+        self.commit_button = ttk.Button(self.button_frame, text="Add", command=self.do_commit, state=DISABLED, width=8)
         self.commit_button.pack(side=RIGHT, anchor=W, fill=X, expand=NO)
         self.status_frame = LabelFrame(self, text="Status")
         self.status_frame.pack(side=BOTTOM, fill=X, expand=YES, pady=4, padx=6)
@@ -380,6 +383,16 @@ class ManualAddApplication(GenericFrame):
 
         self.pack(side=LEFT, fill=BOTH, expand=YES)
 
+    def check_minentry(self,*args):
+        check = 0
+        for i in range(3):
+            if (self.propvalue[i].get()):
+                check = check+1
+        if check == 3:
+            self.commit_button.config(state=NORMAL)
+        else:
+            self.commit_button.config(state=DISABLED)
+            
     def do_clear(self):
         for i in range(len(self.PROPLIST)):
             if i != self.CATEGORY_INDEX:

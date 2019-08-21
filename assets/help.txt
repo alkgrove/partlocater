@@ -17,6 +17,8 @@ File
 .plain
     Search Database -> Opens a search window for exploring and modifying the database.
 .plain
+    Manual Add -> Minimal Add non-Digi-Key part to database.
+.plain
     Sync Tokens -> If there is more than one database, this copies the most recent token to the other databases
 .plain
     Export -> Saves the current connected database to a .sql file. This only works for localhost server databases. This requires mysqldump and mysql executables with a mysql_path defined in preferences section of the partlocater.cfg file. 
