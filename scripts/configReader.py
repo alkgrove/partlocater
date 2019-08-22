@@ -31,7 +31,7 @@ class Config:
     CFG_ENV_VAR = "PARTLOCATER_CFG"
     MAP_FILENAME = "../assets/map.cfg"
     TS_FORMAT = "%d/%m/%y %H:%M:%S "
-    REVISION = "v1.0.5-beta"
+    REVISION = "v1.0.6-beta"
 
     def __init__(self):
         self.loaded_db = None

@@ -315,11 +315,21 @@ class SearchApplication(GenericFrame):
     def on_copy_element(self, event):
         try:
             selected = self.partsTV.selection()[0]
-            val = self.partsTV.item(selected, "values")[(3 if self.partsTV.parent(selected) == '' else 1)]
-            self.parent.clipboard_clear()
-            self.parent.clipboard_append(val)
-            self.parent.update()
-            self.status.set("Part Number '" + val + "' copied to clipboard")
+            if self.partsTV.parent(selected) == '':
+                elements = self.partsTV.get_children(selected)
+                self.parent.clipboard_clear()
+                for i in elements:
+                    element = self.partsTV.item(i, "values")
+                    self.parent.clipboard_append(element[0] + "\t" + element[1] + "\n")
+                self.parent.update()
+                self.status.set("All properties of " + self.partsTV.item(selected,"values")[3] +  " copied to clipboard")
+            else:
+                key = self.partsTV.item(selected, "values")[0]
+                val = self.partsTV.item(selected, "values")[1]
+                self.parent.clipboard_clear()
+                self.parent.clipboard_append(val)
+                self.parent.update()
+                self.status.set(key + " '" + val + "' copied to clipboard")
         except Exception as e:
             pass
 
