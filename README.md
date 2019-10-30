@@ -14,8 +14,10 @@ So for local usage, I recommend XAMPP. XAMPP contains apache, php, cURL and Mari
 
 This was intended to work for either single engineer or a small group. It can work from a single workstation or to a local server. 
 
- v1.0.4-beta Added a popup database selector if there is more than one database and errors if there are no databases. If there is one database it will automatically open on startup. 
+ ## v1.0.4-beta 
+ Added a popup database selector if there is more than one database and errors if there are no databases. If there is one database it will automatically open on startup. 
  
- #v1.1.0 The existing database would fail to load in newer versions of mariadb (10.x). The property tables can have over a hundred columns and for later Mariadb this violated the table size by using varchar types. The solution was to move most types to TEXT. In the assets directory is a simple command line script to change the datatype of an exported .sql database to a newer type. If you are using partlocater for the first time, you do not need to do anything, it will automatically use the right thing. 
+ ## v1.1.0 
+ The existing database would fail to load in newer versions of mariadb (10.x). The property tables can have over a hundred columns and for later Mariadb this violated the table size by using varchar types. The solution was to move most types to TEXT. In the assets directory is a simple command line script to change the datatype of an exported .sql database to a newer type. If you are using partlocater for the first time, you do not need to do anything, it will automatically use the right thing. 
  
  Digikey is changing their API and the existing one will be going away. I am converting partlocater over to the new system; owever, this will continue to work. Note that the instructions for getting an account in the partlocater documentation will no longer work. The biggest difference is that you use the standard digikey login rather than having to sign up for the API. You go to the developers portal and create an organization and production app to get the client ID and client secret. 
