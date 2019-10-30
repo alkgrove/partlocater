@@ -31,7 +31,7 @@ class Config:
     CFG_ENV_VAR = "PARTLOCATER_CFG"
     MAP_FILENAME = "../assets/map.cfg"
     TS_FORMAT = "%d/%m/%y %H:%M:%S "
-    REVISION = "v1.0.7-beta"
+    REVISION = "v1.1.0"
 
     def __init__(self):
         self.loaded_db = None
@@ -48,6 +48,9 @@ class Config:
         self.include = {}
         self.library = {}
         self.bom = {}
+        self.types = {}
+        self.types['Manufacturer Part Number'] = "VARCHAR(255) NOT NULL PRIMARY KEY"
+        self.types['Description'] = "VARCHAR(255) DEFAULT NULL"
         self.parameter = {}
         self.libref = {}
         self.pref = {}
@@ -122,6 +125,9 @@ class Config:
                 self.libref = dict(mapconfig.items(entry))
             if entry == "BOM":
                 self.bom = dict(mapconfig.items(entry))
+            if entry == "types":
+                self.types = dict(mapconfig.items(entry))
+
         if 'log' in self.pref:
             self.log_filename = self.pref['log']
             self.log_write("---------- Application Started")
@@ -149,7 +155,7 @@ class Config:
         return True
 
     def update_part(self, table, data_dict):
-        self.loaded_db.add_columns(table, data_dict)
+        self.loaded_db.add_columns(table, data_dict, self.types)
         query_string = "UPDATE `" + table + "` SET " + ",".join(
             ["`" + str(k) + "`='" + str(v) + "'" for (k, v) in list(data_dict.items())]) + " WHERE `" + \
                        self.parameter['DigiKeyPartNumber'] + "`='" \
@@ -159,9 +165,9 @@ class Config:
     def insert_part(self, table, data_dict):
         rv = False
         if not self.loaded_db.table_exists(table):
-            self.loaded_db.query("CREATE TABLE `" + table + "` (" + self.parameter['Category'] + " VARCHAR(255))")
+            self.loaded_db.query("CREATE TABLE `" + table + "` (" + self.parameter['Category'] + " " + self.loaded_db.get_default_datatype() + ")")
             rv = True
-        self.loaded_db.add_columns(table, data_dict)
+        self.loaded_db.add_columns(table, data_dict, self.types)
         query_string = "INSERT INTO `" + table + "` (`" + "`, `".join(list(data_dict.keys())) + "`) VALUES (" + \
                        ("%s, " * len(data_dict))[:-2] + ")"
         self.loaded_db.query(query_string, *(list(data_dict.values())))

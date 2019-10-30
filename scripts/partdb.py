@@ -1,9 +1,9 @@
 import mysql.connector as maria_db
 from datetime import timedelta, datetime
+from configReader import *
 from tkinter import filedialog
 import json
 import re
-
 
 def validate(str):
     pattern = re.compile(r'[\'\"\`]')
@@ -33,7 +33,6 @@ def sanitize(string):
 
 class MariaDB:
     SAVED_TOKENS = 5
-
     def __init__(self, database_id, host, user, password, database_name):
         self.id = database_id
         self.host = host
@@ -43,6 +42,7 @@ class MariaDB:
         self.connector = None
         self.export_cmd = None
         self.import_cmd = None
+        self.datatype = 1;
 
     def close(self):
         if self.connector is None:
@@ -58,6 +58,23 @@ class MariaDB:
     def get_connector_version(self):
         return maria_db.__version__
 
+    def find_default_datatype(self):
+        try:
+            connector = maria_db.connect(host=self.host, user=self.user, passwd=self.password)
+            my_cursor = connector.cursor(dictionary=True)
+            my_cursor.execute("SELECT COUNT(*) from `information_schema`.`COLUMNS` "
+                              "WHERE (TABLE_SCHEMA = 'altium') AND (DATA_TYPE = 'text')")
+            rv = my_cursor.fetchall()
+            connector.close()
+            if rv[0]['COUNT(*)'] == 0:
+                self.datatype = 0;
+            return 
+        except Exception:
+            raise Exception("Unable to query information_schema")
+
+    def get_default_datatype(self):
+        return ["VARCHAR(255)", "TEXT"][self.datatype]
+        
     def get_database_version(self):
         try:
             connector = maria_db.connect(host=self.host, user=self.user, passwd=self.password)
@@ -119,16 +136,19 @@ class MariaDB:
     ###     Query Wrappers      ###
     ###############################
 
-    def add_columns(self, table, part_dict):
+    def add_columns(self, table, part_dict, types_dict):
         table_col = list(part_dict.keys())
         db_columns = self.query("SHOW COLUMNS FROM `" + table + "`")
         db_columns = [i['Field'] for i in db_columns]
-        minus_list = list(set(table_col) - set(db_columns))
-        if minus_list == []:
+        delta_list = list(set(table_col) - set(db_columns))
+        if delta_list == []:
             return
-        to_add = ['`' + sanitize(i) + '`' for i in minus_list]
-        to_add_str = ((' VARCHAR(255), '.join(to_add)) + ' VARCHAR(255)')
-        self.query("ALTER TABLE `" + table + "` ADD COLUMN (" + to_add_str + ")")
+        column_list = []
+        for item in delta_list:
+            cleanitem = sanitize(item)
+            column_list.append('`' + cleanitem + '` ' + (
+                               sanitize(types_dict[cleanitem]) if cleanitem in types_dict else self.get_default_datatype()))
+        self.query("ALTER TABLE `" + table + "` ADD COLUMN (" + ", ".join(column_list) + ")")
 
     def table_exists(self, table):
         try:
@@ -209,7 +229,7 @@ class MariaDB:
         try:
             connector = maria_db.connect(host=self.host, user=self.user, passwd=self.password, db=self.name)
             my_cursor = connector.cursor(dictionary=True)
-            my_cursor.execute("SELECT * FROM Token WHERE timestamp = (SELECT max(timestamp) FROM Token)")
+            my_cursor.execute("SELECT * FROM token WHERE timestamp = (SELECT max(timestamp) FROM token)")
             rv = my_cursor.fetchall()
             connector.close()
             return rv[0]    
@@ -220,13 +240,13 @@ class MariaDB:
         try:
             connector = maria_db.connect(host=self.host, user=self.user, passwd=self.password, db=self.name)
             cursor = connector.cursor(dictionary=True)
-            cursor.execute("SELECT count(*) FROM Token")
+            cursor.execute("SELECT count(*) FROM token")
             count = cursor.fetchall()[0]['count(*)'] - (self.SAVED_TOKENS - 1)
             if count > 0:
-                cursor.execute("DELETE FROM Token ORDER BY timestamp ASC LIMIT %s", (count,))
+                cursor.execute("DELETE FROM token ORDER BY timestamp ASC LIMIT %s", (count,))
                 connector.commit() 
             query = (
-                'INSERT INTO `Token` (`access_token`, `refresh_token`, `token_type`, `expires_in`, `timestamp`) '
+                'INSERT INTO `token` (`access_token`, `refresh_token`, `token_type`, `expires_in`, `timestamp`) '
                 'VALUES (%(access_token)s, %(refresh_token)s, %(token_type)s, %(expires_in)s, %(timestamp)s)'
                 )
             cursor.execute(query, token)

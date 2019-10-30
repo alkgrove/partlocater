@@ -163,6 +163,8 @@ class Application(GenericFrame):
             err = process.communicate()[1].decode('utf-8')
             if err:
                 Config().log_write(err)
+                if 'Permission' in err:
+                    err += "\nMake sure authentication is setup first before running partlocater"
                 self.status.seterror("Export failed: %s"%err )
                 return
         except OSError as e:
@@ -211,6 +213,7 @@ class Application(GenericFrame):
             except Exception as e:
                 pass
         update = False
+
         # we update all databases except for the newest one
         for mdb, token in tokenlist:
             if maxtoken['access_token'] != token['access_token']:
@@ -220,6 +223,7 @@ class Application(GenericFrame):
                     update = True
                 except Exception as e:
                     self.status.seterror("Update Token Failed: %s", e)
+                    return
         if not update:
             self.status.set("No change, all tokens up to date")
 
@@ -292,10 +296,10 @@ class Application(GenericFrame):
         self.database_menu.entryconfig(self.update_BOM_index, state=NORMAL)
         self.database_menu.entryconfig(self.manualadd_index, state=NORMAL)
         self.database_menu.entryconfig(self.disconnect_index, state=NORMAL)
-
+        
+        Config().loaded_db.find_default_datatype()
         if Config().loaded_db.import_cmd is not None:
             self.database_menu.entryconfig(self.import_index, state=NORMAL)
-        Config().log_write("Check Token")
         # get the latest token in the database
         try:
             token_info = Config().loaded_metadb.get_latest_token()

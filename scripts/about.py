@@ -75,7 +75,7 @@ class SystemInfoApplication(Frame):
         self.pack()
         self.frame = Frame(self, background="white")
         self.frame.pack(fill=X, expand=YES)
-        self.text = Text(self.frame, relief='flat', wrap=WORD, width=64, height=16)
+        self.text = Text(self.frame, relief='flat', wrap=WORD, width=64, height=18)
         self.text.pack(side=TOP, fill=X, expand=YES, padx=4, pady=4)
         self.text.tag_configure('title', font=('Segoe UI Semibold', 12, 'bold'), justify='left')
         self.text.tag_configure('plain', font=('Segoe UI', 10, 'normal'), justify='left')
@@ -93,6 +93,7 @@ class SystemInfoApplication(Frame):
             self.text.insert(END, "\nDatabase Connector Version: " + self.cfg.loaded_db.get_connector_version(),
                              'plain')
             self.text.insert(END, "\nDatabase Version: " + self.cfg.loaded_db.get_database_version(), 'plain')
+            self.text.insert(END, "\nDefault Data Type: " + self.cfg.loaded_db.get_default_datatype(), 'plain');
             tables, rows = self.cfg.loaded_db.get_count()
             self.text.insert(END, "\nDatabase Name: " + self.cfg.loaded_db.name + " (" + str(tables) + " Categories " +
                              str(rows) + " Total Entries)", 'plain')
