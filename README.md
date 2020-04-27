@@ -21,3 +21,7 @@ This was intended to work for either single engineer or a small group. It can wo
  The existing database would fail to load in newer versions of mariadb (10.x). The property tables can have over a hundred columns and for later Mariadb this violated the table size by using varchar types. The solution was to move most types to TEXT. In the assets directory is a simple command line script to change the datatype of an exported .sql database to a newer type. If you are using partlocater for the first time, you do not need to do anything, it will automatically use the right thing. 
  
  Digikey is changing their API and the existing one will be going away. I am converting partlocater over to the new system; owever, this will continue to work. Note that the instructions for getting an account in the partlocater documentation will no longer work. The biggest difference is that you use the standard digikey login rather than having to sign up for the API. You go to the developers portal and create an organization and production app to get the client ID and client secret. 
+
+## v1.5.0
+partlocater uses tkinter and the treeview is dated and did not have editable cells. I found an idea on the web to make that work and implemented it for the parameter list on locate on Digikey plus the search view. Made other minor changes to the UI. A new revieion is coming to accomadate the v3 API for Digikey as they are depracating v2. Wanted to get the UI changes out first. 
+This has been tested on Windows 7 and 10. 
