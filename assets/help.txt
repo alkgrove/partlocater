@@ -55,7 +55,8 @@ The data from Digi-Key that is showing in the Part Info view will be written to 
 Part Info View
 .plain
 This displays the parameter data from a Digi-Key query with the parameter name and paramter value on each line. When a line is selected, Control-C will copy the value of the selected property or properties to the clipboard. Control-A will select all properties and Escape will clear selection. 
-When any of the parameter lines are selected, the name and value is copied to the Modify Name/Value view. The parameter value can be modified and can be cut, copy or pasted to and from the clipboard and the property updated. Note that this does not change the database, only the current view. You will need to click the Commit/Overwrite to put the changes here into the database. Three fields: Base Part Number, Footprint Ref and Library Ref have a different background. This is Altium specific. The Library Ref is the name of the schematic symbol for the part and Footprint Ref is the name of the PCB footprint for the part. The optional base part name is the basic canonical name ie SN74LVC1G04DBVR could have a base part number of 74LVC1G04. These are highlighted because they represent fields that should be set before committing to the database. The software tries to guess the best match, but these fields should be checked prior to committing them. 
+The value field can be changed in place by double clicking on the propery you want to change. Hitting return will set the change. Scrolling or hitting escape will cancel any partially made changes. 
+You will need to click the Commit/Overwrite to put the changes here into the database. Three fields: Base Part Number, Footprint Ref and Library Ref have a different background. This is Altium specific. The Library Ref is the name of the schematic symbol for the part and Footprint Ref is the name of the PCB footprint for the part. The optional base part name is the basic canonical name ie SN74LVC1G04DBVR could have a base part number of 74LVC1G04. These are highlighted because they represent fields that should be set before committing to the database. The software tries to guess the best match, but these fields should be checked prior to committing them. 
 .h2
 Modify Name/Value
 .plain
@@ -95,12 +96,18 @@ Resets all field to defaults and clears the search.
 .h2
 Found Components
 .plain
-This shows each component that met the above filtered results when Find (or Enter) was pushed. It will show columns for Description, Manufacturer, Manufacture Part Number, Distributor Part Number and Database Category. This is the summary line. The small box on the left of each line can be clicked on to expand to show all of the properties for that part or property lines. Clicking on it again will collapse the property lines back to just the summary line. Selecting the summary line will enable the Copy Selected to Part Find and Delete Part from Database buttons. 
-Selecting any of the property lines will bring the selected property down to the Modify Name/Value field. Most values can be editted and updated in the database. On a selected summary line, control-C will copy the Supplier Part Number 1 into the clipboard. On a selected property line, Control-C will copy the value of the property to the clipboard. 
+This shows each component that met the above filtered results when Find (or Enter) was pushed. It will show columns for Description, Manufacturer, Manufacture Part Number, Distributor Part Number and Database Category. This is the summary line. The small box on the left of each line can be clicked on to expand to show all of the properties for that part or property lines. Clicking on it again will collapse the property lines back to just the summary line. A property line can be double clicked to edit the value in place. Return will set the value and commit it to the database. 
 .h2
-Copy Selected To Part Find
+Edit Menu
+.h2
+Copy
 .plain
-This is enabled only when a summary line is selected. The selected lines Supplier Part Number 1 value is copied to the part number field in the main window. Note that a Digi-Key locate overwrite will remove any changes made to the part in the database. 
+Partnumber - will copy the associte part number of the selected line to the clipboard. The selected line can be the summary parent line or any of the property child lines. 
+.plain
+Selected property - will copy the name and value (tab seperated) to the clipboard. This is only enabled when the property line is selected.
+.plain
+Selected All Properties - This will copy name and value (tab seperated) of all property to the clipboard. Either the parent summary line or any of the property child lines are selected. 
+.plain
 .h2
 Delete Part from Database
 .plain

@@ -26,7 +26,6 @@ def digikey_get_part(part_id):
     Config().log_write("Query " + part_id + " with token " + Config().access_token_string)
     response = requests.post('https://api.digikey.com/services/partsearch/v2/partdetails', headers=headers, data=data)
     Config().log_write("Response Code " + str(response.status_code))
-
     if response.status_code != 200:
         r = json.loads(response.text)
         if 'Details' in r:

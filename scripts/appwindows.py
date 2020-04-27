@@ -18,22 +18,39 @@ class SearchApplication(GenericFrame):
         self.pack()
         self.parent = parent
         self.app_window = app_window
-        self.current_selection = None
+        self.selectedField = None
 
         self.parent.title("Partlocater - Advanced Database Search")
         self.parent.iconbitmap(self.FAVICON)
+        self.menubar = Frame(self, background='white')
+        
+        self.menubar.pack(side=TOP, fill=X, expand=YES);
         self.win_frame = Frame(self)
         self.win_frame.pack(side=TOP, fill=BOTH, expand=YES)
+        self.editbutton = Menubutton(self.menubar, text='Edit', background='grey98')
+        self.editbutton.pack(side=LEFT, fill=X)
+        self.editmenu = Menu(self.editbutton, tearoff=0)
+        self.editbutton.config(menu=self.editmenu)
+        self.copySourcesMenu = Menu(self.editbutton, tearoff=0)
+        self.editmenu.add_cascade(label='Copy', menu=self.copySourcesMenu)
+        self.copySourcesMenu.add_command(label='Part Number', state=DISABLED, command=self.on_copy_partnumber)
+        self.partnumber_index = 0
+        self.copySourcesMenu.add_command(label='Selected Parameter', state=DISABLED, command=self.on_copy_parameters)
+        self.selectedParameter_index = 1
+        self.copySourcesMenu.add_command(label='Selected Part All Parameters', state=DISABLED, command=self.on_copy_all_parameters)
+        self.allParameters_index = 2
+        self.editmenu.add_command(label='Delete Part', state=DISABLED, command=self.on_delete)
+        
         self.searchLF = LabelFrame(self.win_frame, text="Search")
         self.searchLF.pack(side=LEFT, fill=X, expand=YES, pady=4, padx=6)
         self.searchLeftF = Frame(self.searchLF)
         self.searchLeftF.pack(side=LEFT, anchor=W)
         self.searchRightF = Frame(self.searchLF)
         self.searchRightF.pack(side=LEFT, anchor=N)
-
+        self.searchLabelWidth = 20
         self.catF = Frame(self.searchLeftF)
         self.catF.pack(side=TOP, anchor=W)
-        self.catL = Label(self.catF, text='Category', width=22, anchor=W, justify=LEFT)
+        self.catL = Label(self.catF, text='Category', width=self.searchLabelWidth, anchor=W, justify=LEFT)
         self.catL.pack(side=LEFT, fill=X, expand=YES)
         self.cat = StringVar()
         self.catE = Entry(self.catF, textvariable=self.cat, width=50, state=DISABLED)
@@ -48,7 +65,7 @@ class SearchApplication(GenericFrame):
 
         self.manF = Frame(self.searchLeftF)
         self.manF.pack(side=TOP, anchor=W)
-        self.manL = Label(self.manF, text='ManufacturerName', width=22, anchor=W, justify=LEFT)
+        self.manL = Label(self.manF, text='ManufacturerName', width=self.searchLabelWidth, anchor=W, justify=LEFT)
         self.manL.pack(side=LEFT, fill=X, expand=YES, pady=4)
         self.man = StringVar()
         self.manE = Entry(self.manF, width=50, textvariable=self.man)
@@ -56,7 +73,7 @@ class SearchApplication(GenericFrame):
 
         self.mpnF = Frame(self.searchLeftF)
         self.mpnF.pack(side=TOP, anchor=W)
-        self.mpnL = Label(self.mpnF, text='ManufacturerPartNumber', width=22, anchor=W, justify=LEFT)
+        self.mpnL = Label(self.mpnF, text='ManufacturerPartNumber', width=self.searchLabelWidth, anchor=W, justify=LEFT)
         self.mpnL.pack(side=LEFT, fill=X, expand=YES, pady=4)
         self.mpn = StringVar()
         self.mpnE = Entry(self.mpnF, width=50, textvariable=self.mpn)
@@ -64,7 +81,7 @@ class SearchApplication(GenericFrame):
 
         self.spnF = Frame(self.searchLeftF)
         self.spnF.pack(side=TOP, anchor=W)
-        self.spnL = Label(self.spnF, text='DigiKeyPartNumber', width=22, anchor=W, justify=LEFT)
+        self.spnL = Label(self.spnF, text='DigiKeyPartNumber', width=self.searchLabelWidth, anchor=W, justify=LEFT)
         self.spnL.pack(side=LEFT, fill=X, expand=YES, pady=4)
         self.spn = StringVar()
         self.spnE = Entry(self.spnF, width=50, textvariable=self.spn)
@@ -72,7 +89,7 @@ class SearchApplication(GenericFrame):
 
         self.descF = Frame(self.searchLeftF)
         self.descF.pack(side=TOP, anchor=W)
-        self.descL = Label(self.descF, text='ProductDescription', width=22, anchor=W, justify=LEFT)
+        self.descL = Label(self.descF, text='ProductDescription', width=self.searchLabelWidth, anchor=W, justify=LEFT)
         self.descL.pack(side=LEFT, fill=X, expand=YES, pady=4)
         self.desc = StringVar()
         self.descE = Entry(self.descF, width=50, textvariable=self.desc)
@@ -81,57 +98,72 @@ class SearchApplication(GenericFrame):
 
         self.findF = Frame(self.searchLeftF)
         self.findF.pack(side=TOP, anchor=E)
-        self.findB = ttk.Button(self.findF, text="Find", width=6, command=lambda event=None: self.do_find(event))
-        self.parent.bind("<Return>", self.do_find)
+        self.findB = ttk.Button(self.findF, text="Find", width=12, command=lambda event=None: self.do_find(event))
         self.findB.pack(side=LEFT, pady=4)
         self.clearB = ttk.Button(self.findF, text="Clear", width=6, command=self.on_clear_search)
         self.clearB.pack(side=LEFT, pady=4)
 
         self.partsLF = LabelFrame(self, text="Found Components")
-        self.partsLF.pack(side=TOP, fill=X, expand=YES, pady=4, padx=6)
+        self.partsLF.pack(side=TOP, fill=X, expand=YES, pady=4, padx=4)
         self.partsF = Frame(self.partsLF)
-        self.partsF.pack(side=TOP)
+        self.partsF.pack(side=TOP, pady=4, padx=4)
+        # change treeview for search here
         self.partsTV = Treeview(self.partsF, selectmode=BROWSE, show='tree headings', columns=self.column_id)
-        self.partsTV.bind('<<TreeviewSelect>>', self.on_select_new_field)
+
+        self.partsTV.bind('<Double-Button-1>', self.on_edit_item)
+        self.partsTV.bind('<<TreeviewSelect>>', self.fieldChanged)
+        self.partsTV.bind('<Escape>', self.clearSelection)
+        self.partsTV.bind('<MouseWheel>', self.mousewheel)
+        self.partsTV.bind('<Button-4>', self.mousewheel)
+        self.partsTV.bind('<Button-5>', self.mousewheel)
+        vcmd = (self.register(self.validateEntry), '%P')
+        self.editfield = ttk.Entry(self.partsTV, validate='key', validatecommand=vcmd)
+        self.editfield.bind('<Return>', self.updateField)
+        self.editfield.bind('<Escape>', self.clearSelection)
+
+        
         self.partsTV.bind('<Control-c>', self.on_copy_element)
         self.partsTV.column("#0", minwidth=0, width=18, stretch=NO)
         for t in self.column_id:
             self.partsTV.heading(t, text=Config().parameter[t])
         self.partsTV.column('Category', width=60)
         self.scrollbar = Scrollbar(self.partsF, orient='vertical', command=self.partsTV.yview)
-        self.scrollbar.pack(side=RIGHT, fill=Y)
+        self.scrollbar.pack(side=RIGHT, fill=Y, expand=YES, anchor=E)
         self.partsTV.configure(yscroll=self.scrollbar.set)
-        self.scrollbar.config(command=self.partsTV.yview)
+        self.scrollbar.config(command=self.yview)
+        
         self.partsTV.pack(side=TOP, anchor=W, fill=X, expand=YES)
         self.partsTV.delete(*self.partsTV.get_children())
+        # end change of treeview
+        # change the following to menu item
+        #self.part_buttonF = Frame(self.partsLF)
+        #self.delete_partB = ttk.Button(self.partsLF, text="Delete Part from Database", command=self.on_delete,
+                                       #state=DISABLED)
+        #self.delete_partB.pack(side=RIGHT, anchor=W, expand=NO, pady=4, padx=6)
+        #self.partsB = ttk.Button(self.partsLF, text="Copy Selected To Part Find", command=self.on_copy, state=DISABLED)
+        #self.partsB.pack(side=RIGHT, anchor=W, expand=NO, pady=4, padx=6)
+        #self.part_buttonF.pack(side=BOTTOM)
+        # start remove vvv
+        #self.element_labelframe = LabelFrame(self, text="Modify Name/Value")
+        #self.element_labelframe.pack(side=TOP, fill=X, expand=YES, pady=4, padx=6)
+        #self.element_frame = Frame(self.element_labelframe)
+        #self.element_frame.pack(side=TOP)
 
-        self.part_buttonF = Frame(self.partsLF)
-        self.delete_partB = ttk.Button(self.partsLF, text="Delete Part from Database", command=self.on_delete,
-                                       state=DISABLED)
-        self.delete_partB.pack(side=RIGHT, anchor=W, expand=NO, pady=4, padx=6)
-        self.partsB = ttk.Button(self.partsLF, text="Copy Selected To Part Find", command=self.on_copy, state=DISABLED)
-        self.partsB.pack(side=RIGHT, anchor=W, expand=NO, pady=4, padx=6)
-        self.part_buttonF.pack(side=BOTTOM)
-        
-        self.element_labelframe = LabelFrame(self, text="Modify Name/Value")
-        self.element_labelframe.pack(side=TOP, fill=X, expand=YES, pady=4, padx=6)
-        self.element_frame = Frame(self.element_labelframe)
-        self.element_frame.pack(side=TOP)
+        #self.element_name = StringVar()
+        #self.element_label = Label(self.element_frame, textvariable=self.element_name, width=30, anchor=W, justify=LEFT)
+        #self.element_label.pack(side=LEFT, anchor=W, fill=X, expand=YES, pady=4)
+        #self.element_value = StringVar()
+        #self.element_entry = Entry(self.element_frame, width=50, textvariable=self.element_value)
+        #self.element_entry.pack(side=LEFT, fill=X, expand=YES, pady=4)
+        #self.default_color = self.element_entry.cget('background')
 
-        self.element_name = StringVar()
-        self.element_label = Label(self.element_frame, textvariable=self.element_name, width=30, anchor=W, justify=LEFT)
-        self.element_label.pack(side=LEFT, anchor=W, fill=X, expand=YES, pady=4)
-        self.element_value = StringVar()
-        self.element_entry = Entry(self.element_frame, width=50, textvariable=self.element_value)
-        self.element_entry.pack(side=LEFT, fill=X, expand=YES, pady=4)
-        self.default_color = self.element_entry.cget('background')
-
-        self.element_update = ttk.Button(self.element_frame, text="Update", command=self.on_update_element,
-                                         state=DISABLED)
-        self.element_update.pack(side=LEFT, fill=X, expand=YES, pady=4)
-        self.element_cancel = ttk.Button(self.element_frame, text="Cancel", command=self.on_clear_element,
-                                         state=DISABLED)
-        self.element_cancel.pack(side=LEFT, fill=X, expand=YES, pady=4)
+        #self.element_update = ttk.Button(self.element_frame, text="Update", command=self.on_update_element,
+                                         #state=DISABLED)
+        #self.element_update.pack(side=LEFT, fill=X, expand=YES, pady=4)
+        #self.element_cancel = ttk.Button(self.element_frame, text="Cancel", command=self.on_clear_element,
+                                         #state=DISABLED)
+        #self.element_cancel.pack(side=LEFT, fill=X, expand=YES, pady=4)
+        # end remove ^^^
 
         self.statusLF = LabelFrame(self, text="Status")
         self.statusLF.pack(side=BOTTOM, fill=X, expand=YES, pady=4, padx=6)
@@ -139,6 +171,49 @@ class SearchApplication(GenericFrame):
         self.statusF.pack(side=TOP, fill=X, expand=YES, padx=6)
         self.status = self.StatusBar(self.statusF, self)
 
+    def validateEntry(self, P):
+        if (len(P) <= 120):
+            return True
+        else:
+            self.bell()
+            return False
+    # scroll bar event
+    def yview(self,*args):
+        if self.selectedField is not None:
+            self.editfield.place_forget()
+            self.selectedField = None
+        self.partsTV.yview(*args)
+
+    # mousewheel and button4/5 event
+    def mousewheel(self, event):
+        if self.selectedField is not None:
+            self.editfield.place_forget()
+            self.selectedField = None
+            
+    # escape event in treeview or editfield
+    def clearSelection(self, event):
+        self.editfield.place_forget()
+        self.selectedField = None
+        self.partsTV.selection_remove(self.partsTV.selection())
+        self.status.set("")
+              
+    # double button event
+    def on_edit_item(self, event):
+        if self.partsTV.parent(self.partsTV.selection()) == '': # testing should not edit a parent
+            self.selectedField = None
+            return
+        if(self.partsTV.identify_region(event.x, event.y) == 'cell'):
+            self.selectedField = self.partsTV.identify_row(event.y)
+            x,y,width,height = self.partsTV.bbox(self.selectedField, '#2')
+            v = self.partsTV.set(self.selectedField, 1)
+            self.editfield.pack()
+            self.editfield.delete(0, len(self.editfield.get()))
+            self.editfield.insert(0,v)
+            self.editfield.selection_range(0, 'end')
+            self.editfield.focus_force()
+            self.editfield.place(x=x, y=y, width=width, height=height)    
+
+    # find button event
     def on_find(self):
         category = self.cat.get()
         search_list = []
@@ -216,36 +291,33 @@ class SearchApplication(GenericFrame):
                         self.partsTV.insert(id, 'end', text=spn, values=(params, record[params]))
         self.status.set(("No" if count == 0 else str(count)) + " items found")
 
-    def on_update_element(self):
-        if self.current_selection is None:
+    # return event
+    def updateField(self, event):
+        value=self.editfield.get()
+        self.editfield.place_forget()
+        name = self.partsTV.item(self.selectedField, "text")
+        if not validate(value):
+            self.status.seterror("Invalid value, must not have quotes")
             return
-        item_name = self.partsTV.item(self.current_selection, "text")
-        key = self.element_name.get()
-        if len(key) > 0:
-            value = self.element_value.get()
-            if not validate(value):
-                self.status.seterror("Invalid value, must not have quotes")
-                return
-            element_parent = self.partsTV.parent(self.current_selection)
-            table_name = self.partsTV.item(element_parent, "values")[self.column_id.index('Category')]
-            part_number = self.partsTV.item(element_parent, "values")[self.column_id.index('DigiKeyPartNumber')]
-            set_param = "SET `" + key + "` = '" + value + "' "
-            where = "WHERE `" + Config().parameter['DigiKeyPartNumber'] + "` = '" + part_number + "'"
-            qry = "UPDATE `" + Config().loaded_db.name + "`.`" + table_name + "` " + set_param + where
-            try:
-                Config().loaded_db.query(qry)
-            except Exception as e:
-                self.status.seterror("Database query failed: %s", e)
-                return
-            self.status.set("Changed " + key + " to " + value + " for part " + part_number + ".")
-            self.partsTV.set(self.current_selection, "#2", value)
-            self.element_update.config(state=DISABLED)
+        self.partsTV.set(self.selectedField, "#2", value)
+        key = self.partsTV.set(self.selectedField, "#1")
+        self.editfield.place_forget()
+        element_parent = self.partsTV.parent(self.selectedField)
+        table_name = self.partsTV.item(element_parent, "values")[self.column_id.index('Category')]
+        part_number = self.partsTV.item(element_parent, "values")[self.column_id.index('DigiKeyPartNumber')]
+        set_param = "SET `" + key + "` = '" + value + "' "
+        where = "WHERE `" + Config().parameter['DigiKeyPartNumber'] + "` = '" + part_number + "'"
+        qry = "UPDATE `" + Config().loaded_db.name + "`.`" + table_name + "` " + set_param + where
+        print(qry)
+        #try:
+            #Config().loaded_db.query(qry)
+        #except Exception as e:
+            #self.status.seterror("Database query failed: %s", e)
+            #return
+        self.status.set("Changed " + key + " to " + value + " for part " + part_number + ".")
+        self.partsTV.see(self.selectedField)
 
-    def on_clear_element(self):
-        self.current_selection = None
-        self.element_name.set("")
-        self.element_value.set("")
-
+    # clear button in search frame   
     def on_clear_search(self):
         self.man.set("")
         self.mpn.set("")
@@ -263,18 +335,18 @@ class SearchApplication(GenericFrame):
             self.element_entry.config(background=self.default_color)
             return
         self.after(250, self.do_flash)
-
+    # category option menu
     def on_category(self, value):
         self.catE.config(state=NORMAL)
         self.cat.set(value)
         self.catE.config(state=DISABLED)
 
-    def on_copy(self):
-        selected = self.partsTV.selection()[0]
-        key = self.partsTV.item(selected, "values")[self.column_id.index('DigiKeyPartNumber')]
-        self.app_window.part_num_string.set(key)
-        self.status.set("Part Number '" + key + "' copied to Part Find")
-
+    #def on_copy(self):
+        #selected = self.partsTV.selection()[0]
+        #key = self.partsTV.item(selected, "values")[self.column_id.index('DigiKeyPartNumber')]
+        #self.app_window.part_num_string.set(key)
+        #self.status.set("Part Number '" + key + "' copied to Part Find")
+    # Edit -> Delete menu
     def on_delete(self):
         selected = self.partsTV.selection()[0]
         key = self.partsTV.item(selected, "values")[self.column_id.index('DigiKeyPartNumber')]
@@ -284,38 +356,78 @@ class SearchApplication(GenericFrame):
                                      "` = '" + key + "'")
             self.status.set("Part Number '" + key + "' deleted from database")
 
-    def on_select_new_field(self, event):
-        new_selection = self.partsTV.selection()[0]
-        current_value = self.element_value.get()
-        if self.partsTV.parent(new_selection) != '':
-            if self.current_selection is None or self.partsTV.item(self.current_selection, "values")[1] \
-                    == current_value:
-                value = self.partsTV.item(new_selection, "values")[1]
-                key = self.partsTV.item(new_selection, "values")[0]
-                self.element_name.set(key)
-                self.element_value.set(value)
-                self.current_selection = new_selection
-                self.partsB.config(state=DISABLED)
-                self.delete_partB.config(state=DISABLED)
-                self.element_update.config(state=NORMAL)
-                self.element_cancel.config(state=NORMAL)
-                self.status.set("Part Number '" + self.partsTV.item(self.current_selection, "text") + "' Selected")
-            else:
-                self.do_flash()
-                self.do_flash()
-                self.status.seterror("Modified Parameter Value not Saved - Update or Cancel")
-
+    # treeview select event
+    def fieldChanged(self, event):
+        selected = self.partsTV.selection()
+        if len(selected) > 0:
+            self.copySourcesMenu.entryconfig(self.partnumber_index, state=NORMAL)
+            self.copySourcesMenu.entryconfig(self.allParameters_index, state=NORMAL)
         else:
-            self.partsB.config(state=NORMAL)
-            self.delete_partB.config(state=NORMAL)
-            self.element_update.config(state=DISABLED)
-            self.element_cancel.config(state=DISABLED)
-            self.on_clear_element()
-        
+            self.copySourcesMenu.entryconfig(self.partnumber_index, state=DISABLED)
+            self.copySourcesMenu.entryconfig(self.allParameters_index, state=DISABLED)
+            return
+        if self.partsTV.parent(selected) == '':
+            self.copySourcesMenu.entryconfig(self.selectedParameter_index, state=DISABLED)
+        else:
+            self.copySourcesMenu.entryconfig(self.selectedParameter_index, state=NORMAL)
+        if selected != self.selectedField:
+            self.editfield.place_forget()
+            self.selectedField = None
+
+
+    def on_copy_parameters(self):
+        selected = self.partsTV.selection()
+        if len(selected) == 0 or self.partsTV.parent(selected) == '':
+            return
+        try:
+            property = self.partsTV.item(selected, "values")
+            self.parent.clipboard_clear()
+            self.parent.clipboard_append(property[0] + '\t' + property[1])
+            self.parent.update()
+            self.status.set(property[0] + ' ' + property[1] + " copied to clipboard")
+        except Exception as e:
+            pass
+    
+    def on_copy_partnumber(self):
+        selected = self.partsTV.selection()
+        if len(selected) == 0 or self.partsTV.parent(selected) == '':
+            return
+        try:
+            if self.partsTV.parent(selected) != '':
+                selected = self.partsTV.parent(selected)
+            partnumber = self.partsTV.item(selected, "values")[self.column_id.index('DigiKeyPartNumber')]
+            self.parent.clipboard_clear()
+            self.parent.clipboard_append(partnumber)
+            self.parent.update()
+            self.status.set(" '" + partnumber + "' copied to clipboard")
+        except Exception as e:
+            pass
+    
+    def on_copy_all_parameters(self):
+        selected = self.partsTV.selection()
+        if len(selected) == 0:
+            return
+        try:
+            if self.partsTV.parent(selected) != '':
+                selected = self.partsTV.parent(selected)
+            partnumber = self.partsTV.item(selected, "values")[self.column_id.index('DigiKeyPartNumber')]            
+            elements = self.partsTV.get_children(selected)
+            self.parent.clipboard_clear()
+            self.parent.clipboard_clear()
+            for i in elements:
+                element = self.partsTV.item(i, "values")
+                self.parent.clipboard_append(element[0] + "\t" + element[1] + "\n")
+            self.parent.update()
+            self.status.set("All properties of " + partnumber +  " copied to clipboard")
+        except Exception as e:
+            pass
+
+          # deprecate   
     def on_copy_element(self, event):
         try:
             selected = self.partsTV.selection()[0]
             if self.partsTV.parent(selected) == '':
+                partnumber = self.partsTV.item
                 elements = self.partsTV.get_children(selected)
                 self.parent.clipboard_clear()
                 for i in elements:

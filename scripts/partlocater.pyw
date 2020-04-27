@@ -64,6 +64,8 @@ class Application(GenericFrame):
         self.commit_btn.config(state=DISABLED)
         self.locate_btn.config(state=DISABLED)
         self.clear_btn.config(state=DISABLED)
+        self.selectedField = None
+
         self.current_selection = None
         self.hidden = {}
         self.hiliteDict = {'Library Ref':1, 'Footprint Ref':1, 'Base Part Number':1}
@@ -325,19 +327,13 @@ class Application(GenericFrame):
         self.clear_btn.config(state=NORMAL)
         Config().log_write("Connected to "+database.name)
 
-    def on_clear_element(self):
-        self.current_selection = None
-        self.element_name.set("")
-        self.element_value.set("")
-
     def on_clear_btn(self):
-        self.on_clear_element()
         self.part_num_string.set("")
         for i in self.part_info_tree.get_children():
             self.part_info_tree.delete(i)
+        self.editfield.place_forget()        
         self.update_part_info({})
         self.commit_btn.config(state=DISABLED)
-        self.element_update.config(state=DISABLED)
         self.part_label.set("Part Info")
         self.status.set("")
  
@@ -382,7 +378,6 @@ class Application(GenericFrame):
         part_stat = ""
         try:
             self.commit_btn.config(state=NORMAL)
-            self.element_update.config(state=DISABLED)
             if Config().entry_exists(part_num, self.loaded_table):
                 self.commit_btn["text"] = "Overwrite"
                 part_stat = ", part is already in database."
@@ -392,7 +387,6 @@ class Application(GenericFrame):
                 part_stat = ", not in database, commit to add."
         except Exception as e:
             self.handleError("Error while searching for entry in Database", e)
-        self.on_clear_element()
         self.reset_hilite()
         if ('warnOnDigiReel' in Config().pref) and ('Digi-Reel' in self.hidden['Packaging']):
             part_stat += " Warning - Digireel Selected"
@@ -406,25 +400,6 @@ class Application(GenericFrame):
             self.status.set("Found part %s%s", part_num, part_stat)
         self.part_label.set("Part Info: %s" % part_num)
         self.update_part_info(self.loaded_parameters)
-        self.element_menu.delete(0, 'end')
-        for item in alt_package.keys():
-            self.element_menu.add_radiobutton(variable=self.element_value, value=alt_package[item], label=item)
-
-    def on_update_element(self):
-        if self.current_selection is None:
-            return
-        item_name = self.part_info_tree.item(self.current_selection, "text")
-        self.current_selection = None
-        new_item_value = self.element_value.get()
-        if not validate(new_item_value):
-            self.status.seterror("Invalid value, must not have quotes")
-            return
-        self.loaded_parameters[item_name] = new_item_value
-        self.on_clear_element()
-        self.status.set("%s updated", item_name)
-        if item_name in self.hiliteDict:
-            self.hiliteDict[item_name] = 0
-        self.update_part_info(self.loaded_parameters)
 
     def do_flash(self):
         current_color = self.element_entry.cget("background")
@@ -437,32 +412,58 @@ class Application(GenericFrame):
         
     def on_select_all(self, event):
         self.part_info_tree.selection_add(self.part_info_tree.get_children())
+    # new routines
+    def validateEntry(self, P):
+        if (len(P) <= 120):
+            return True
+        else:
+            self.bell()
+            return False
 
-    def on_select_new_field(self, event):
-        if not self.part_info_tree.selection(): # isEmpty return
+    def updateField(self, event):
+        new_value=self.editfield.get()
+        self.editfield.place_forget()
+        name = self.part_info_tree.item(self.selectedField, "text")
+        if not validate(new_value):
+            self.status.seterror("Invalid value, must not have quotes")
             return
-        new_selection = self.part_info_tree.selection()[0]
-        current_value = self.element_value.get()
-        key = self.part_info_tree.item(new_selection, "text")
-        if "Supplier Packaging" in key and self.element_menu.index('end') > 0:
-            self.element_menubutton.pack(side=LEFT, fill=X, expand=YES, pady=4, padx=8)
-        else:
-            self.element_menubutton.pack_forget()
-        
-        # first we check if it has been updated or first selection or
-        # we check if the last selected item value and the value in the text entry has changed
-        if self.current_selection is None or self.part_info_tree.item(self.current_selection, "values")[1] \
-                == current_value:
-            # no old stuff to update, so update the modify fields and set the new current_selection
-            value = self.part_info_tree.item(new_selection, "values")[1]
-            self.element_name.set(key)
-            self.element_value.set(value)
-            self.current_selection = new_selection
-            self.element_update.config(state=NORMAL)
-            self.status.set("Name '%s' Fetched - modify then update", key)
-        else:
-            self.do_flash()
-            self.status.seterror("Modified Parameter Value not Saved - Update or Cancel")
+        self.part_info_tree.set(self.selectedField, 1, value=new_value)
+        self.loaded_parameters[name] = new_value
+        if name in self.hiliteDict:
+            self.hiliteDict[name] = 0
+        self.update_part_info(self.loaded_parameters)
+             
+    def on_edit_item(self, event):
+        if(self.part_info_tree.identify_region(event.x, event.y) == 'cell'):
+            self.selectedField = self.part_info_tree.identify_row(event.y)
+            x,y,width,height = self.part_info_tree.bbox(self.selectedField, '#2')
+            v = self.part_info_tree.set(self.selectedField, 1)
+            self.editfield.pack()
+            self.editfield.delete(0, len(self.editfield.get()))
+            self.editfield.insert(0,v)
+            self.editfield.selection_range(0, 'end')
+            self.editfield.focus_force()
+            self.editfield.place(x=x, y=y, width=width, height=height)
+
+    # if we scroll, drop selection
+    def yview(self,*args):
+        if self.selectedField is not None:
+            self.editfield.place_forget()
+            self.selectedField = None
+        self.part_info_tree.yview(*args)
+
+    def mousewheel(self, event):
+        if self.selectedField is not None:
+            self.editfield.place_forget()
+            self.selectedField = None
+
+    def fieldChanged(self, event):
+        if self.selectedField is None:
+            return
+        selected = self.part_info_tree.selection()
+        if len(selected) > 1 or selected[0] != self.selectedField:
+            self.editfield.place_forget()
+            self.selectedField = None
 
 
     ###############################
@@ -487,7 +488,7 @@ class Application(GenericFrame):
                     self.part_info_tree.insert('', 'end', iid=k, text=k, values=(k, v))
 
 
-    def on_copy_element(self, event):
+    def on_copy(self, event):
         try:
             list = []
             for selected in self.part_info_tree.selection():
@@ -504,12 +505,12 @@ class Application(GenericFrame):
         except Exception as e:
             pass
 
-    def on_clear_selection(self, event):
-        for item in self.part_info_tree.selection():
-            self.part_info_tree.selection_remove(item)
-        self.on_clear_element()
+    def clearSelection(self, event):
+        self.editfield.place_forget()
+        self.selectedField = None
+        self.part_info_tree.selection_remove(self.part_info_tree.selection())
         self.status.set("")
-
+        
     ###############################
     ###           GUI           ###
     ###############################
@@ -527,11 +528,6 @@ class Application(GenericFrame):
         self.right_frame.pack(side="left", padx=10)
         self.window_frame.pack(pady=(0, 12))
         
-        self.element_labelframe = LabelFrame(self.window_frame, text="Modify Name/Value")
-        self.element_labelframe.pack(side=TOP, fill=X, expand=YES, pady=4, padx=6)
-        self.element_frame = Frame(self.element_labelframe);
-        self.element_frame.pack(side=TOP)
-
         self.menubar = Menu(self)
         self.database_menu = Menu(self.menubar, tearoff=0)
         self.databaseListMenu = Menu(self.database_menu, tearoff=0)
@@ -599,19 +595,14 @@ class Application(GenericFrame):
         self.status.set("Select Database")
 
         # Part Info Text Box
-
         self.part_label = StringVar()
         self.part_info_label = Label(self.left_frame, textvariable=self.part_label)
         self.part_info_label.pack(side=TOP, fill=X, expand=YES)
         self.part_label.set("Part Info")
-        self.part_info_tree = Treeview(self.left_frame)
+        self.part_info_tree = Treeview(self.left_frame, selectmode=BROWSE)
         self.part_info_tree.pack(side=LEFT, anchor=W, fill=X, expand=YES)
-        self.part_info_tree.bind('<<TreeviewSelect>>', self.on_select_new_field)
-        self.part_info_tree.bind('<Control-c>', self.on_copy_element)
-        self.part_info_tree.bind('<Control-a>', self.on_select_all)
-        self.part_info_tree.bind('<Escape>', self.on_clear_selection)
-        self.part_info_tree['show'] = 'headings'
         self.part_info_tree['columns'] = ('parameter', 'value')
+        self.part_info_tree['show'] = 'headings'
         self.part_info_tree.heading('parameter', text='Parameter Name')
         self.part_info_tree.heading('value', text='Parameter Value')
         self.part_info_tree.column('parameter', width=260)
@@ -619,27 +610,26 @@ class Application(GenericFrame):
         self.scrollbar = Scrollbar(self.left_frame, orient='vertical', command=self.part_info_tree.yview)
         self.scrollbar.pack(side=RIGHT, fill=Y, expand=YES, anchor=E)
         self.part_info_tree.configure(yscroll=self.scrollbar.set)
-        self.scrollbar.config(command=self.part_info_tree.yview)
+        self.scrollbar.config(command=self.yview)
         treefontname = ttk.Style().lookup("Treeview","font")
         sysbold = font.nametofont(treefontname).copy()
         sysbold.config(weight='bold')
         self.part_info_tree.tag_configure('boldfont', font=sysbold)        
         self.part_info_tree.tag_configure('hilite', background='azure')
-        self.element_name = StringVar()
-        self.element_label = Label(self.element_frame, textvariable=self.element_name, width=30, anchor=E)
-        self.element_label.pack(side=LEFT, anchor=W, fill=X, expand=NO, pady=4, padx=4)
-        self.element_value = StringVar()
-        self.element_entry = Entry(self.element_frame, width=50, textvariable=self.element_value)
-        self.element_entry.pack(side=LEFT, fill=X, expand=YES, pady=4, padx=4)
-        self.default_color = self.element_entry.cget('background')
 
-        self.element_update = ttk.Button(self.element_frame, text="Update", command=self.on_update_element, state=DISABLED)
-        self.element_update.pack(side=LEFT, fill=X, expand=YES, pady=4, padx=4)
-        self.element_cancel = ttk.Button(self.element_frame, text="Cancel", command=self.on_clear_element)
-        self.element_cancel.pack(side=LEFT, fill=X, expand=YES, pady=4, padx=4)
-        self.element_menubutton = ttk.Menubutton(self.element_frame, text="Alt Package")
-        self.element_menu = Menu(self.element_menubutton, tearoff=0)
-        self.element_menubutton.configure(menu=self.element_menu)
+        self.part_info_tree.bind('<Double-Button-1>', self.on_edit_item)
+        self.part_info_tree.bind('<<TreeviewSelect>>', self.fieldChanged)
+        self.part_info_tree.bind('<Escape>', self.clearSelection)
+        self.part_info_tree.bind('<MouseWheel>', self.mousewheel)
+        self.part_info_tree.bind('<Button-4>', self.mousewheel)
+        self.part_info_tree.bind('<Button-5>', self.mousewheel)
+        vcmd = (self.register(self.validateEntry), '%P')
+        self.editfield = ttk.Entry(self.part_info_tree, validate='key', validatecommand=vcmd)
+        self.editfield.bind('<Return>', self.updateField)
+        self.part_info_tree.bind('<Control-c>', self.on_copy)
+        self.part_info_tree.bind('<Control-a>', self.on_select_all)
+
+
 
 
 Config().parse_file()
