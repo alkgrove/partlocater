@@ -9,6 +9,17 @@ from datetime import datetime
 
 def digikey_get_part(part_id):
     # Get part information from source site given a specified part ID.
+    # this needs to change to a get instead of post
+    # GET /Search/v3/Products/p5555-nd HTTP/1.1
+    # Host: api.digikey.com
+    # X-DIGIKEY-Client-Id: heWGx9w6DK8kZf3jRv5E9jUAhXrGBU67
+    # Authorization: Bearer s4T5DbmFZadjNRAEbUnN9zkU3DBj
+    # X-DIGIKEY-Locale-Site: US
+    # X-DIGIKEY-Locale-Language: en
+    # X-DIGIKEY-Locale-Currency: USD
+    # X-DIGIKEY-Locale-ShipToCountry: us
+    # X-DIGIKEY-Customer-Id: 0
+    
     if Config().access_token_string is None:
         raise Exception("No Token Loaded")
     headers = {
@@ -54,7 +65,7 @@ def digikey_get_new_token(refresh_token):
     }
     data = {"refresh_token": refresh_token, "client_id": Config().client_id,
             "client_secret": Config().client_secret, "grant_type": "refresh_token"}
-    response = requests.post('https://sso.digikey.com/as/token.oauth2', headers=headers, data=data)
+    response = requests.post('https://api.digikey.com/v1/oauth2/token', headers=headers, data=data)
     
     if response.status_code != 200:
         Config().log_write("Data: %s Response: %s" % (data, response))

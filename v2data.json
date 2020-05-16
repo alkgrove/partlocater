@@ -1,0 +1,335 @@
+{
+  "PartDetails": {
+    "MyPricing": [],
+    "Obsolete": false,
+    "MediaLinks": [
+      {
+        "MediaType": "Datasheets                                                                                                                     ",
+        "Title": "Chip Monolithic Ceramic Caps Part Numbering",
+        "SmallPhoto": "",
+        "Thumbnail": "",
+        "Url": "https://search.murata.co.jp/Ceramy/image/img/A01X/partnumbering_e_01.pdf"
+      },
+      {
+        "MediaType": "Datasheets                                                                                                                     ",
+        "Title": "Chip Multilayer Ceramic Caps Catalog",
+        "SmallPhoto": "",
+        "Thumbnail": "",
+        "Url": "https://www.murata.com/~/media/webrenewal/support/library/catalog/products/capacitor/mlcc/c02e.ashx?la=en-us"
+      },
+      {
+        "MediaType": "Datasheets                                                                                                                     ",
+        "Title": "GRM155R71H104ME14x Ref Sheet",
+        "SmallPhoto": "",
+        "Thumbnail": "",
+        "Url": "https://search.murata.co.jp/Ceramy/image/img/A01X/G101/ENG/GRM155R71H104ME14-01.pdf"
+      },
+      {
+        "MediaType": "Product Photos                                                                                                                 ",
+        "Title": "0402 (1005 Metric) 0,55mm",
+        "SmallPhoto": "http://media.digikey.com/Renders/Murata%20Renders/0402-(1005-Metric)-0,55mm_sml.jpg",
+        "Thumbnail": "http://media.digikey.com/Renders/Murata%20Renders/0402-(1005-Metric)-0,55mm_tmb.jpg",
+        "Url": "http://media.digikey.com/Renders/Murata%20Renders/0402-(1005-Metric)-0,55mm.jpg"
+      },
+      {
+        "MediaType": "Design Resources                                                                                                               ",
+        "Title": "GRM155R71H104ME14D SimSurfing Design Tool",
+        "SmallPhoto": "",
+        "Thumbnail": "",
+        "Url": "https://ds.murata.co.jp/simsurfing/gateway.html?partnumbers=%5B%22GRM155R71H104ME14D%22%5D&rgear=jomoqke&rgearinfo=com"
+      },
+      {
+        "MediaType": "HTML Datasheet",
+        "Title": "Chip Multilayer Ceramic Caps Catalog",
+        "SmallPhoto": "",
+        "Thumbnail": "",
+        "Url": "https://www.digikey.com/datasheets/murata-electronics-north-america/murata-electronics-north-america-c02e-ashx"
+      },
+      {
+        "MediaType": "EDA / CAD Models",
+        "Title": "GRM155R71H104ME14D by SnapEDA",
+        "SmallPhoto": "",
+        "Thumbnail": "",
+        "Url": "https://www.snapeda.com/parts/GRM155R71H104ME14D/Murata/view-part/?ref=digikey"
+      }
+    ],
+    "StandardPackage": 1,
+    "LimitedTaxonomy": {
+      "Children": [
+        {
+          "Children": [
+            {
+              "Children": [],
+              "PartCount": 1,
+              "NewPartCount": 0,
+              "ParameterId": -8,
+              "ValueId": "60",
+              "Parameter": "Categories",
+              "Value": "Ceramic Capacitors"
+            }
+          ],
+          "PartCount": 1,
+          "NewPartCount": 0,
+          "ParameterId": -8,
+          "ValueId": "3",
+          "Parameter": "Categories",
+          "Value": "Capacitors"
+        }
+      ],
+      "PartCount": 1,
+      "NewPartCount": 0,
+      "ParameterId": -8,
+      "ValueId": "0",
+      "Parameter": "Categories",
+      "Value": "Out of Bounds"
+    },
+    "Kits": [],
+    "KitContents": [],
+    "MatingProducts": [],
+    "ResultCode": 0,
+    "SearchLocale": null,
+    "AssociatedProducts": [],
+    "ForUseWithProducts": [],
+    "AdditionalValueFee": 0,
+    "StandardPricing": [
+      {
+        "BreakQuantity": 1,
+        "UnitPrice": 0.1,
+        "TotalPrice": 0.1
+      },
+      {
+        "BreakQuantity": 10,
+        "UnitPrice": 0.042,
+        "TotalPrice": 0.42
+      },
+      {
+        "BreakQuantity": 100,
+        "UnitPrice": 0.0186,
+        "TotalPrice": 1.86
+      },
+      {
+        "BreakQuantity": 500,
+        "UnitPrice": 0.0133,
+        "TotalPrice": 6.65
+      },
+      {
+        "BreakQuantity": 1000,
+        "UnitPrice": 0.01045,
+        "TotalPrice": 10.45
+      },
+      {
+        "BreakQuantity": 2500,
+        "UnitPrice": 0.0095,
+        "TotalPrice": 23.75
+      },
+      {
+        "BreakQuantity": 5000,
+        "UnitPrice": 0.00874,
+        "TotalPrice": 43.7
+      }
+    ],
+    "Category": {
+      "Id": "2",
+      "Text": "Capacitors"
+    },
+    "ChipOutpostPart": false,
+    "RohsInfo": "ROHS3 Compliant",
+    "LeadStatus": "Lead Free",
+    "Family": {
+      "Id": "11",
+      "Text": "Ceramic Capacitors"
+    },
+    "Parameters": [
+      {
+        "ParameterId": 7,
+        "ValueId": "2",
+        "Parameter": "Packaging",
+        "Value": "Cut Tape (CT)"
+      },
+      {
+        "ParameterId": 1989,
+        "ValueId": "0",
+        "Parameter": "Part Status",
+        "Value": "Active"
+      },
+      {
+        "ParameterId": 2049,
+        "ValueId": "u0.1µF",
+        "Parameter": "Capacitance",
+        "Value": "0.1µF"
+      },
+      {
+        "ParameterId": 3,
+        "ValueId": "1900",
+        "Parameter": "Tolerance",
+        "Value": "±20%"
+      },
+      {
+        "ParameterId": 14,
+        "ValueId": "238738",
+        "Parameter": "Voltage - Rated",
+        "Value": "50V"
+      },
+      {
+        "ParameterId": 17,
+        "ValueId": "422415",
+        "Parameter": "Temperature Coefficient",
+        "Value": "X7R"
+      },
+      {
+        "ParameterId": 252,
+        "ValueId": "242918",
+        "Parameter": "Operating Temperature",
+        "Value": "-55°C ~ 125°C"
+      },
+      {
+        "ParameterId": 5,
+        "ValueId": "1",
+        "Parameter": "Features",
+        "Value": "-"
+      },
+      {
+        "ParameterId": 707,
+        "ValueId": "1",
+        "Parameter": "Ratings",
+        "Value": "-"
+      },
+      {
+        "ParameterId": 405,
+        "ValueId": "350483",
+        "Parameter": "Applications",
+        "Value": "General Purpose"
+      },
+      {
+        "ParameterId": 69,
+        "ValueId": "409416",
+        "Parameter": "Mounting Type",
+        "Value": "Surface Mount, MLCC"
+      },
+      {
+        "ParameterId": 16,
+        "ValueId": "39158",
+        "Parameter": "Package / Case",
+        "Value": "0402 (1005 Metric)"
+      },
+      {
+        "ParameterId": 46,
+        "ValueId": "6310",
+        "Parameter": "Size / Dimension",
+        "Value": "0.039\" L x 0.020\" W (1.00mm x 0.50mm)"
+      },
+      {
+        "ParameterId": 1500,
+        "ValueId": "1",
+        "Parameter": "Height - Seated (Max)",
+        "Value": "-"
+      },
+      {
+        "ParameterId": 1501,
+        "ValueId": "5314",
+        "Parameter": "Thickness (Max)",
+        "Value": "0.022\" (0.55mm)"
+      },
+      {
+        "ParameterId": 508,
+        "ValueId": "1",
+        "Parameter": "Lead Spacing",
+        "Value": "-"
+      },
+      {
+        "ParameterId": 4,
+        "ValueId": "1",
+        "Parameter": "Lead Style",
+        "Value": "-"
+      }
+    ],
+    "PartUrl": "/product-detail/en/murata-electronics/GRM155R71H104ME14D/490-10701-1-ND/5251402",
+    "PrimaryDatasheet": "https://search.murata.co.jp/Ceramy/image/img/A01X/G101/ENG/GRM155R71H104ME14-01.pdf",
+    "PrimaryPhoto": "http://media.digikey.com/Renders/Murata%20Renders/0402-(1005-Metric)-0,55mm.jpg",
+    "PrimaryVideo": "",
+    "RohsSubs": [],
+    "Series": {
+      "ParameterId": -5,
+      "ValueId": "5390",
+      "Parameter": "Series",
+      "Value": "GRM"
+    },
+    "SuggestedSubs": [],
+    "ManufacturerLeadWeeks": "11 weeks",
+    "ManufacturerPageUrl": "/en/supplier-centers/m/murata-electronics",
+    "PartStatus": "Active",
+    "AlternatePackaging": [
+      {
+        "ManufacturerPartNumber": "GRM155R71H104ME14D",
+        "MinimumOrderQuantity": 10000,
+        "NonStock": false,
+        "Packaging": {
+          "ParameterId": 7,
+          "ValueId": "1",
+          "Parameter": "Packaging",
+          "Value": "Tape & Reel (TR)"
+        },
+        "PartId": 4905181,
+        "QuantityOnHand": 290000,
+        "DigiKeyPartNumber": "490-10701-2-ND",
+        "ProductDescription": "CAP CER 0.1UF 50V X7R 0402",
+        "UnitPrice": 0.00693,
+        "ManufacturerName": {
+          "Id": "490",
+          "Text": "Murata Electronics"
+        },
+        "ManfacturerPublicQuantity": 0,
+        "AvailableOnOrder": 0
+      },
+      {
+        "ManufacturerPartNumber": "GRM155R71H104ME14D",
+        "MinimumOrderQuantity": 1,
+        "NonStock": false,
+        "Packaging": {
+          "ParameterId": 7,
+          "ValueId": "243",
+          "Parameter": "Packaging",
+          "Value": "Digi-Reel®"
+        },
+        "PartId": 5251526,
+        "QuantityOnHand": 297663,
+        "DigiKeyPartNumber": "490-10701-6-ND",
+        "ProductDescription": "CAP CER 0.1UF 50V X7R 0402",
+        "UnitPrice": 0.1,
+        "ManufacturerName": {
+          "Id": "490",
+          "Text": "Murata Electronics"
+        },
+        "ManfacturerPublicQuantity": 0,
+        "AvailableOnOrder": 0
+      }
+    ],
+    "DetailedDescription": "0.1µF ±20% 50V Ceramic Capacitor X7R 0402 (1005 Metric)",
+    "ReachStatus": "Reach unknown",
+    "ExportControlClassNumber": "EAR99",
+    "HTSUSCode": "8532.24.0020",
+    "TariffDescription": "",
+    "BuyUrl": "https://www.digikey.com/product-detail/en/murata-electronics/GRM155R71H104ME14D/490-10701-1-ND/5251402",
+    "ManufacturerPartNumber": "GRM155R71H104ME14D",
+    "MinimumOrderQuantity": 1,
+    "NonStock": false,
+    "Packaging": {
+      "ParameterId": 7,
+      "ValueId": "2",
+      "Parameter": "Packaging",
+      "Value": "Cut Tape (CT)"
+    },
+    "PartId": 5251402,
+    "QuantityOnHand": 297663,
+    "DigiKeyPartNumber": "490-10701-1-ND",
+    "ProductDescription": "CAP CER 0.1UF 50V X7R 0402",
+    "UnitPrice": 0.1,
+    "ManufacturerName": {
+      "Id": "490",
+      "Text": "Murata Electronics"
+    },
+    "ManfacturerPublicQuantity": 0,
+    "AvailableOnOrder": 0
+  }
+}
+ 

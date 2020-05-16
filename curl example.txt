@@ -1,0 +1,27 @@
+Sandbox
+Client ID 5p0HIXeqPIlax3cKobBUF4S9WcuDGWeX
+Client Secret X4JOh4ApAqOJ2U6G
+
+Bearer SCo9eYNOzlwTEnCIc6eNUM5JBkOL
+
+curl -X GET "https://sandbox-api.digikey.com/Search/v3/Products/497-16404-1-ND" \
+-H  "accept: application/json" \
+-H  "Authorization: Bearer SCo9eYNOzlwTEnCIc6eNUM5JBkOL" \
+-H  "X-DIGIKEY-Client-Id: 5p0HIXeqPIlax3cKobBUF4S9WcuDGWeX" \
+-H  "X-DIGIKEY-Locale-Site: US" \
+-H  "X-DIGIKEY-Locale-Language: en" \
+-H  "X-DIGIKEY-Locale-Currency: USD" \
+-H  "X-DIGIKEY-Locale-ShipToCountry: US" \
+-H  "X-DIGIKEY-Customer-Id: 10239086"
+
+tQAXVOHRMM2FlzpAaXGmHskPSClA
+
+curl -X GET "https://api.digikey.com/Search/v3/Products/497-16404-1-ND" \
+-H  "accept: application/json" \
+-H  "Authorization: Bearer tQAXVOHRMM2FlzpAaXGmHskPSClA" \
+-H  "X-DIGIKEY-Client-Id: 919g2ejnVSOiEBYh9ALbSrd3sMQCIs7b" \
+-H  "X-DIGIKEY-Locale-Site: US" \
+-H  "X-DIGIKEY-Locale-Language: en" \
+-H  "X-DIGIKEY-Locale-Currency: USD" \
+-H  "X-DIGIKEY-Locale-ShipToCountry: US" \
+-H  "X-DIGIKEY-Customer-Id: 10239086"

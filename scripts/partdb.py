@@ -246,8 +246,8 @@ class MariaDB:
                 cursor.execute("DELETE FROM token ORDER BY timestamp ASC LIMIT %s", (count,))
                 connector.commit() 
             query = (
-                'INSERT INTO `token` (`access_token`, `refresh_token`, `token_type`, `expires_in`, `timestamp`) '
-                'VALUES (%(access_token)s, %(refresh_token)s, %(token_type)s, %(expires_in)s, %(timestamp)s)'
+                'INSERT INTO `token` (`access_token`, `refresh_token`, `token_type`, `expires_in`, `refresh_token_expires_in`, `timestamp`) '
+                'VALUES (%(access_token)s, %(refresh_token)s, %(token_type)s, %(expires_in)s, %(refresh_token_expires_in)s, %(timestamp)s)'
                 )
             cursor.execute(query, token)
             connector.commit()

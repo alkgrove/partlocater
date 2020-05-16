@@ -24,7 +24,7 @@ $redirect_uri =  $auth['redirect_uri'];
 if (strlen($client_id) < 28) {
 printError("partlocater.cfg doesn't look like it is set up properly");
 }
-$query = "https://sso.digikey.com/as/authorization.oauth2?response_type=code&client_id=" . $client_id . "&redirect_uri=" . $redirect_uri;
+$query = "https://api.digikey.com/v1/oauth2/authorize?response_type=code&client_id=" . $client_id . "&redirect_uri=" . $redirect_uri;
 echo "<h4 style=\"color:black\">Digi-Key Initial Authentication Link</h4>";
 echo "<div style=\"font-weight:bold;\">";
 echo "<A href=\"" . $query . "\">" . $query . "</A></div><br>";

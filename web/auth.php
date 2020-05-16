@@ -28,7 +28,7 @@ $authdata = array('code' => $_GET['code'],
 	'redirect_uri' => $auth['redirect_uri'],
 	'grant_type' => 'authorization_code');
 $authurl = curl_init();
-curl_setopt($authurl, CURLOPT_URL, 'https://sso.digikey.com/as/token.oauth2');
+curl_setopt($authurl, CURLOPT_URL, 'https://api.digikey.com/v1/oauth2/token');
 curl_setopt($authurl, CURLOPT_RETURNTRANSFER, true);
 curl_setopt($authurl, CURLOPT_POSTFIELDS, http_build_query($authdata));
 curl_setopt($authurl, CURLOPT_POST, true);
@@ -83,6 +83,7 @@ if (!$use_db) {
 	$query_str = "CREATE TABLE IF NOT EXISTS `". $metadbname. "`.`Token` (
 		`access_token` VARCHAR(255) DEFAULT NULL, `refresh_token` VARCHAR(255) DEFAULT NULL,
 		`token_type` VARCHAR(255) DEFAULT NULL, `expires_in` VARCHAR(255) DEFAULT NULL, 
+		`refresh_token_expires_in` VARCHAR(255) DEFAULT NULL,
 		`timestamp` TIMESTAMP NULL DEFAULT NULL);";
 	if (!mysqli_query($db,$query_str)) {
 		printError('Unable to create token table for ' . $metadbname);
@@ -90,7 +91,7 @@ if (!$use_db) {
 	}
 		
 }
-$query_str = "INSERT INTO `". $metadbname . "`.`Token` (`access_token`, `refresh_token`, `token_type`, `expires_in`, `timestamp`) VALUES ('". $token['access_token']."','".$token['refresh_token']."','".$token['token_type']."','".$token['expires_in']."','".$timestamp."');";
+$query_str = "INSERT INTO `". $metadbname . "`.`Token` (`access_token`, `refresh_token`, `token_type`, `expires_in`, `refresh_token_expires_in`, `timestamp`) VALUES ('". $token['access_token']."','".$token['refresh_token']."','".$token['token_type']."','".$token['expires_in']."','".$token['refresh_token_expires_in']."','".$timestamp."');";
 
 if (!mysqli_query($db,$query_str)) {
 	printError('Data base query failed ' . $query_str);
