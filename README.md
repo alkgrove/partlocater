@@ -1,6 +1,6 @@
 # partlocater
 Find a part on Digi-Key and import parameters into local database
-
+## NOTE - We are updating partlocater to V3 and this is a work in progress. Digikey has suspended all V2 accounts and will not authorize V2 API. Check back in a few weeks. 5/15/2020
 We are not associated with Digi-Key in any way other than being a long time customer. Digi-Key has an api-portal for which one of the functions is to provide all the technical parameters for the components they sell. They aggressively keep this accurate and up to date as if their business depends on it. This app will query Digi-Key with a Digi-Key partnumber and downloads the parameters from Digi-Key and puts them into a SQL database. Several eCAD tools can use the information in the database to put the information into the schematic. 
 
 This could work for a number of tools such as Orcad and Altium. Since I have Altium, it is the first tool that it works for. 
