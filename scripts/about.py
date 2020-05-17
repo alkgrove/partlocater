@@ -66,6 +66,32 @@ class AboutApplication(Frame):
 class SystemInfoApplication(Frame):        
     FAVICON = "../assets/favicon.ico"
 
+    def textualizePeriod(self, period):
+        days = period//86400
+        rem = period - (days * 86400)
+        hr = rem//3600
+        rem = rem - (hr * 3600)
+        min = rem//60
+        sec = rem - (min * 60)
+        time = ""
+        if days == 1:
+            time += "1 day "
+        elif days > 1:
+            time += str(days) + " days "
+        if hr == 1:
+            time += "1 hour "
+        elif hr > 1:
+            time += str(hr) + " hours "
+        if min == 1: 
+            time += "1 minute "
+        elif min > 1:
+            time += str(min) + " minutes "
+        if sec == 1: 
+            time += "1 second"
+        elif sec > 1:
+            time += str(sec) + " seconds"
+        return time.rstrip()
+        
     def __init__(self, parent=None, cfg=None):
         Frame.__init__(self, parent)
         self.parent = parent
@@ -75,7 +101,7 @@ class SystemInfoApplication(Frame):
         self.pack()
         self.frame = Frame(self, background="white")
         self.frame.pack(fill=X, expand=YES)
-        self.text = Text(self.frame, relief='flat', wrap=WORD, width=64, height=18)
+        self.text = Text(self.frame, relief='flat', wrap=WORD, width=72, height=20)
         self.text.pack(side=TOP, fill=X, expand=YES, padx=4, pady=4)
         self.text.tag_configure('title', font=('Segoe UI Semibold', 12, 'bold'), justify='left')
         self.text.tag_configure('plain', font=('Segoe UI', 10, 'normal'), justify='left')
@@ -102,23 +128,20 @@ class SystemInfoApplication(Frame):
                 token_info = self.cfg.loaded_metadb.get_latest_token()
                 expires = int(((token_info['timestamp'] + timedelta(seconds=int(token_info['expires_in'])))
                                - datetime.now()).total_seconds())
-                hr = expires//3600
-                minutes = int((expires - (hr * 3600))/60)
-                if hr == 0:
-                    if minutes == 0:
-                        expired = "expired"
-                    else:
-                        expired = ""
-                elif hr == 1:
-                    expired = "1 hour"
+                if (expires <= 0):
+                    self.text.insert(END, "\nLast Token: " + token_info['timestamp'].ctime() +
+                                 " Expired", 'plain')
                 else:
-                    expired = str(hr) + " hours"
-                if minutes == 1:
-                    expired += " 1 minute"
+                    self.text.insert(END, "\nLast Token: " + token_info['timestamp'].ctime() +
+                                 " Expires in " + self.textualizePeriod(expires), 'plain')
+                expires = int(((token_info['timestamp'] + timedelta(seconds=int(token_info['refresh_token_expires_in'])))
+                               - datetime.now()).total_seconds())
+                if (expires <= 0):
+                    self.text.insert(END, "\nRefresh Token: " + token_info['timestamp'].ctime() +
+                                 " Expired", 'plain')
                 else:
-                    expired += " " + str(minutes) + " minutes"
-                self.text.insert(END, "\nLast Token: " + token_info['timestamp'].ctime() +
-                                 " Expires in " + expired, 'plain')
+                    self.text.insert(END, "\nRefresh Token: " + token_info['timestamp'].ctime() +
+                                 " Expires in " + self.textualizePeriod(expires), 'plain')
             except Exception as e:
                 Config().log_write(e)
 

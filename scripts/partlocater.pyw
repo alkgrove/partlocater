@@ -311,6 +311,9 @@ class Application(GenericFrame):
             self.status.seterror("Can't find token from %s. Use browser to get initial token", Config().loaded_metadb.host)
             Config().log_write("Error while trying to get token from database %s. Error: %s", Config().loaded_metadb.host, str(e))
             return
+        if is_token_expired(token_info):
+            messagebox.showerror("Token Expired", """This is a dead token.  It has passed on! This token is no more! It has ceased to be! It has expired and gone to meet it's maker! Its a stiff! Bereft of life, it rests in peace! Its metabolic processes are now history! Its off the twig! Its kicked the bucket, Its shuffled off its mortal coil, run down the curtain and joined the bleeding choir invisible!! THIS IS AN EX-TOKEN!!\nPlease, in your browser, go to local server for Digi-Key authorization.""")
+            quit()
         
         if is_token_old(token_info):
             try:          

@@ -1,5 +1,6 @@
 import requests
 import traceback
+import html
 from configReader import *
 from datetime import datetime
 
@@ -9,7 +10,6 @@ from datetime import datetime
 
 def digikey_get_part(part_id):
     # Get part information from source site given a specified part ID.
-    # this needs to change to a get instead of post
     # GET /Search/v3/Products/p5555-nd HTTP/1.1
     # Host: api.digikey.com
     # X-DIGIKEY-Client-Id: heWGx9w6DK8kZf3jRv5E9jUAhXrGBU67
@@ -24,18 +24,17 @@ def digikey_get_part(part_id):
         raise Exception("No Token Loaded")
     headers = {
         'accept': 'application/json',
-        'authorization': Config().access_token_string,
-        'content-type': 'application/json',
-        'x-digikey-customer-id': Config().customer_id,
-        'x-digikey-locale-currency': 'USD',
-        'x-digikey-locale-language': 'EN',
-        'x-digikey-locale-shiptocountry': 'US',
-        'x-digikey-locale-site': 'US',
-        'x-ibm-client-id': Config().client_id
+        'authorization': 'Bearer ' + Config().access_token_string,
+        'X-DIGIKEY-Client-Id': Config().client_id,
+        'X-DIGIKEY-Locale-Site': Config().locale_site,
+        'X-DIGIKEY-Locale-Language': Config().locale_language,
+        'X-DIGIKEY-Locale-Currency': Config().locale_currency,
+        'X-DIGIKEY-Locale-ShipToCountry': Config().locale_shiptocountry,
+        'X-DIGIKEY-Customer-Id': Config().customer_id
     }
-    data = '{"Part":"' + part_id + '","IncludeAllAssociatedProducts":"false","IncludeAllForUseWithProducts":"false"}'
+    url = 'https://api.digikey.com/Search/v3/Products/' + html.escape(part_id)
     Config().log_write("Query " + part_id + " with token " + Config().access_token_string)
-    response = requests.post('https://api.digikey.com/services/partsearch/v2/partdetails', headers=headers, data=data)
+    response = requests.get(url, headers=headers)
     Config().log_write("Response Code " + str(response.status_code))
     if response.status_code != 200:
         r = json.loads(response.text)
@@ -58,6 +57,14 @@ def is_token_old(token):
     else:
         return False
 
+def is_token_expired(token):
+    timestamp = token['timestamp']
+    expires = token['refresh_token_expires_in']
+    expire_timestamp = timestamp + timedelta(seconds=int(expires))
+    if expire_timestamp < datetime.now():
+        return True
+    else:
+        return False        
 
 def digikey_get_new_token(refresh_token):
     headers = {
@@ -72,7 +79,6 @@ def digikey_get_new_token(refresh_token):
         raise Exception("Bad status code returned from digikey while updating token: "+str(response.status_code))
     return json.loads(response.text)
 
-
 def translate_part_json(data):
     if data is None:
         return None, None, None, None
@@ -86,31 +92,31 @@ def translate_part_json(data):
     hidden = dict()
     indirect_form = re.compile(r"\='([\w\s]+)'")
     try:
-        table_name = library[data['PartDetails']['Category']['Text']]
+        table_name = library[data['LimitedTaxonomy']['Children'][0]['Value']]
     except KeyError:
-        table_name = data['PartDetails']['Category']['Text']
+        table_name = data['LimitedTaxonomy']['Children'][0]['Value']
 
     try:
         dst[parameter['StandardPricing']] = ", ".join(str(i['BreakQuantity'])+"="+str(i['UnitPrice'])
-                                                      for i in (data['PartDetails']['StandardPricing']))
-        dst[parameter['Category']] = data['PartDetails']['Category']['Text']
-        dst[parameter['RohsInfo']] = data['PartDetails']['RohsInfo']
-        for e in data['PartDetails']['Parameters']:
+                                                      for i in (data['StandardPricing']))
+        dst[parameter['Category']] = data['LimitedTaxonomy']['Children'][0]['Value']
+        dst[parameter['RohsInfo']] = data['RoHSStatus']
+        for e in data['Parameters']:
             try:
                 dst[parameter[e['Parameter']]] = e['Value']
             except KeyError:
                 dst[e['Parameter']] = e['Value']
 
         # Exceptions
-        dst[parameter['PrimaryDatasheet']] = data['PartDetails']['PrimaryDatasheet']
-        dst[parameter['ManufacturerPartNumber']] = data['PartDetails']['ManufacturerPartNumber']
-        dst[parameter['DigiKeyPartNumber']] = data['PartDetails']['DigiKeyPartNumber']
-        dst[parameter['ProductDescription']] = data['PartDetails']['ProductDescription']
-        dst[parameter['ManufacturerName']] = data['PartDetails']['ManufacturerName']['Text']
-        dst[parameter['QuantityOnHand']] = data['PartDetails']['QuantityOnHand']
+        dst[parameter['PrimaryDatasheet']] = data['PrimaryDatasheet']
+        dst[parameter['ManufacturerPartNumber']] = data['ManufacturerPartNumber']
+        dst[parameter['DigiKeyPartNumber']] = data['DigiKeyPartNumber']
+        dst[parameter['ProductDescription']] = data['ProductDescription']
+        dst[parameter['ManufacturerName']] = data['Manufacturer']['Value']
+        dst[parameter['QuantityOnHand']] = data['QuantityAvailable']
         dst["Supplier 1"] = "Digi-Key"
         alt_package = {}
-        for item in data['PartDetails']['AlternatePackaging']:
+        for item in data['AlternatePackaging']:
             min_quantity = item['MinimumOrderQuantity']
             packaging = item['Packaging']['Value']
             spn = item['DigiKeyPartNumber']
@@ -118,8 +124,8 @@ def translate_part_json(data):
                 dst[parameter['CustomPackaging']] = spn
             elif min_quantity > 1:
                 alt_package[spn + " " + packaging + " (" + str(min_quantity) + ")"] = spn
-        hidden['MinimumOrderQuantity'] = data['PartDetails']['MinimumOrderQuantity']
-        hidden['Packaging'] = data['PartDetails']['Packaging']['Value']
+        hidden['MinimumOrderQuantity'] = data['MinimumOrderQuantity']
+        hidden['Packaging'] = data['Packaging']['Value']
         if len(alt_package) > 0:
             dst[parameter['VolumePackaging']] = alt_package[[*alt_package.keys()][0]]
         if 'Supplier Device Package' in dst:
@@ -132,13 +138,13 @@ def translate_part_json(data):
         if cat not in libref:
             dst["Library Ref"] = ""
         else:
-            ref = libref[cat]   
+            ref = libref[cat]
             indirect_match = re.match(indirect_form, ref)
             if indirect_match is not None:
                 dst["Library Ref"] = dst[indirect_match.group(1)]
             else:
                 dst["Library Ref"] = ref
-        dst["Base Part Number"] = data['PartDetails']['ManufacturerPartNumber']
+        dst["Base Part Number"] = data['ManufacturerPartNumber']
         for ex in exclude:
             if ex in dst.keys():
                 del dst[ex]

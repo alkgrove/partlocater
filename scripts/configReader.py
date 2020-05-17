@@ -31,13 +31,17 @@ class Config:
     CFG_ENV_VAR = "PARTLOCATER_CFG"
     MAP_FILENAME = "../assets/map.cfg"
     TS_FORMAT = "%d/%m/%y %H:%M:%S "
-    REVISION = "v1.1.0"
+    REVISION = "v3.0.0"
 
     def __init__(self):
         self.loaded_db = None
         self.loaded_metadb = None
         self.client_id = None
         self.client_secret = None
+        self.locale_site = None
+        self.locale_language = None
+        self.locale_currency = None
+        self.locale_shiptocountry = None
         self.customer_id = None
         self.redirect_uri = None
         self.cfg_file = None
@@ -110,6 +114,23 @@ class Config:
                 self.customer_id = auth_dict['customer']
                 self.redirect_uri = auth_dict['redirect_uri']
                 self.client_secret = auth_dict['client_secret']
+                if 'locale_site' in auth_dict:
+                    self.locale_site = auth_dict['locale_site']
+                else:
+                    self.locale_site = 'US'
+                if 'locale_language' in auth_dict:
+                    self.locale_language = auth_dict['locale_language']
+                else:
+                    self.locale_language = 'en'
+                if 'locale_currency' in auth_dict:
+                    self.locale_currency = auth_dict['locale_currency']
+                else:
+                    self.locale_currency = 'USD'
+                if 'shiptocountry' in auth_dict:
+                    self.locale_shiptocountry = auth_dict['shiptocountry']
+                else:
+                    self.locale_shiptocountry = 'us'
+                    
             if entry == "preferences":
                 self.pref = dict(config.items(entry))
         for entry in mapconfig.sections():      
