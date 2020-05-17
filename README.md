@@ -1,6 +1,6 @@
 # partlocater
 Find a part on Digi-Key and import parameters into local database
-## NOTE - We are updating partlocater to V3 and this is a work in progress. Digikey has suspended all V2 accounts and will not authorize V2 API. Check back in a few weeks. 5/15/2020
+*We are now compatible with Digi-Key V3 API*
 We are not associated with Digi-Key in any way other than being a long time customer. Digi-Key has an api-portal for which one of the functions is to provide all the technical parameters for the components they sell. They aggressively keep this accurate and up to date as if their business depends on it. This app will query Digi-Key with a Digi-Key partnumber and downloads the parameters from Digi-Key and puts them into a SQL database. Several eCAD tools can use the information in the database to put the information into the schematic. 
 
 This could work for a number of tools such as Orcad and Altium. Since I have Altium, it is the first tool that it works for. 
@@ -13,7 +13,8 @@ Digi-Key has a .net solution if you want a fully windows solution. I've never us
 So for local usage, I recommend XAMPP. XAMPP contains apache, php, cURL and MariaDB and installs on Windows. The reason for this is I wanted to be able to scale it to an intranet server and Apache, MareaDB, PHP, and cURL work on most Linux and Unix OS. So in the doc folder is a description on how to set this up. 
 
 This was intended to work for either single engineer or a small group. It can work from a single workstation or to a local server. 
-
+ ## v3.0.0 
+ Updated to be compatible with Digi-Keys V3 API. V2 and V1 have been suspended and will no longer work. Made changes in the treeview user interface where the right hand cells are edittable and no longer require a separate entry box. 
  ## v1.0.4-beta 
  Added a popup database selector if there is more than one database and errors if there are no databases. If there is one database it will automatically open on startup. 
  
