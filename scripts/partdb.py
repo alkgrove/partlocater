@@ -218,8 +218,9 @@ class MariaDB:
             connector = maria_db.connect(host=self.host, user=self.user, passwd=self.password)
             my_cursor = connector.cursor(dictionary=True)
             table_name = "`" + self.name + "`.`" + table + "`"
-            my_cursor.execute("UPDATE " + table_name + " SET `Pricing 1` = '%s', `Supplier Stock 1` = '%s' WHERE "
-                                                       "`Supplier Part Number 1` = '%s'", pricing, str(stock), part)
+            foo = "UPDATE " + table_name + " SET `Pricing 1` = '%s', `Supplier Stock 1` = '%s' WHERE `Supplier Part Number 1` = '%s'", pricing, str(stock), part
+            print(foo)
+            my_cursor.execute("UPDATE " + table_name + " SET `Pricing 1` = '%s', `Supplier Stock 1` = '%s' WHERE `Supplier Part Number 1` = '%s'", pricing, str(stock), part)
             connector.commit()
             connector.close()
         except Exception as e:
@@ -232,6 +233,8 @@ class MariaDB:
             my_cursor.execute("SELECT * FROM token WHERE timestamp = (SELECT max(timestamp) FROM token)")
             rv = my_cursor.fetchall()
             connector.close()
+            if (len(rv) == 0):
+                return None
             return rv[0]    
         except Exception as e:
             raise Exception("Unable to query token", e)

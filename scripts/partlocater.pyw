@@ -206,11 +206,12 @@ class Application(GenericFrame):
         for db, mdb in Config().db_list:
             try: 
                 token = mdb.get_latest_token()
-                ts = token['timestamp'].timestamp()
-                if ts > maxts:
-                    maxmdb = mdb
-                    maxtoken = token
-                    maxts = ts
+                if token is not None:
+                    ts = token['timestamp'].timestamp()
+                    if ts > maxts:
+                        maxmdb = mdb
+                        maxtoken = token
+                        maxts = ts
                 tokenlist.append((mdb, token))
             except Exception as e:
                 pass
@@ -218,7 +219,7 @@ class Application(GenericFrame):
 
         # we update all databases except for the newest one
         for mdb, token in tokenlist:
-            if maxtoken['access_token'] != token['access_token']:
+            if token is None or maxtoken['access_token'] != token['access_token']:
                 try:
                     mdb.set_token(maxtoken);
                     self.status.set("Updating token to host: %s database: %s" % (mdb.host, mdb.name))
@@ -366,6 +367,18 @@ class Application(GenericFrame):
 
     def on_locate_btn(self):
         alt_package = {}
+        token_info = Config().loaded_metadb.get_latest_token()
+        if is_token_old(token_info):
+            try:          
+                Config().log_write("Token Expired, Updating from Digi-Key with %s" % token_info['refresh_token'])
+                new_token = digikey_get_new_token(token_info['refresh_token'])
+                new_token['timestamp'] = datetime.now()
+                Config().access_token_string = new_token['access_token']
+            except Exception as e:
+                self.status.seterror("Digikey Query: %s", e)
+                return
+            Config().loaded_metadb.set_token(new_token)
+            self.status.set("Token Updated")
         try:
             part_num = self.get_part_num_field()
             self.status.set("Query Digi-Key")

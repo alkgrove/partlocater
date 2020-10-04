@@ -309,11 +309,11 @@ class SearchApplication(GenericFrame):
         where = "WHERE `" + Config().parameter['DigiKeyPartNumber'] + "` = '" + part_number + "'"
         qry = "UPDATE `" + Config().loaded_db.name + "`.`" + table_name + "` " + set_param + where
         print(qry)
-        #try:
-            #Config().loaded_db.query(qry)
-        #except Exception as e:
-            #self.status.seterror("Database query failed: %s", e)
-            #return
+        try:
+            Config().loaded_db.query(qry)
+        except Exception as e:
+            self.status.seterror("Database query failed: %s", e)
+            return
         self.status.set("Changed " + key + " to " + value + " for part " + part_number + ".")
         self.partsTV.see(self.selectedField)
 

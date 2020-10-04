@@ -1,8 +1,8 @@
 import requests
 import traceback
-import html
 from configReader import *
 from datetime import datetime
+from urllib.parse import quote
 
 ###############################
 ###    Digikey Parts API    ###
@@ -12,7 +12,7 @@ def digikey_get_part(part_id):
     # Get part information from source site given a specified part ID.
     # GET /Search/v3/Products/p5555-nd HTTP/1.1
     # Host: api.digikey.com
-    # X-DIGIKEY-Client-Id: heWGx9w6DK8kZf3jRv5E9jUAhXrGBU67
+    # X-DIGIKEY-Client-Id: heWGx9w6DK8kZf3jRv5E9jXAhXrGBU67
     # Authorization: Bearer s4T5DbmFZadjNRAEbUnN9zkU3DBj
     # X-DIGIKEY-Locale-Site: US
     # X-DIGIKEY-Locale-Language: en
@@ -32,7 +32,7 @@ def digikey_get_part(part_id):
         'X-DIGIKEY-Locale-ShipToCountry': Config().locale_shiptocountry,
         'X-DIGIKEY-Customer-Id': Config().customer_id
     }
-    url = 'https://api.digikey.com/Search/v3/Products/' + html.escape(part_id)
+    url = 'https://api.digikey.com/Search/v3/Products/' + quote(part_id, safe='')
     Config().log_write("Query " + part_id + " with token " + Config().access_token_string)
     response = requests.get(url, headers=headers)
     Config().log_write("Response Code " + str(response.status_code))
