@@ -40,6 +40,7 @@ class SearchApplication(GenericFrame):
         self.copySourcesMenu.add_command(label='Selected Part All Parameters', state=DISABLED, command=self.on_copy_all_parameters)
         self.allParameters_index = 2
         self.editmenu.add_command(label='Delete Part', state=DISABLED, command=self.on_delete)
+        self.delete_part_index = 1
         
         self.searchLF = LabelFrame(self.win_frame, text="Search")
         self.searchLF.pack(side=LEFT, fill=X, expand=YES, pady=4, padx=6)
@@ -134,37 +135,7 @@ class SearchApplication(GenericFrame):
         
         self.partsTV.pack(side=TOP, anchor=W, fill=X, expand=YES)
         self.partsTV.delete(*self.partsTV.get_children())
-        # end change of treeview
-        # change the following to menu item
-        #self.part_buttonF = Frame(self.partsLF)
-        #self.delete_partB = ttk.Button(self.partsLF, text="Delete Part from Database", command=self.on_delete,
-                                       #state=DISABLED)
-        #self.delete_partB.pack(side=RIGHT, anchor=W, expand=NO, pady=4, padx=6)
-        #self.partsB = ttk.Button(self.partsLF, text="Copy Selected To Part Find", command=self.on_copy, state=DISABLED)
-        #self.partsB.pack(side=RIGHT, anchor=W, expand=NO, pady=4, padx=6)
-        #self.part_buttonF.pack(side=BOTTOM)
-        # start remove vvv
-        #self.element_labelframe = LabelFrame(self, text="Modify Name/Value")
-        #self.element_labelframe.pack(side=TOP, fill=X, expand=YES, pady=4, padx=6)
-        #self.element_frame = Frame(self.element_labelframe)
-        #self.element_frame.pack(side=TOP)
-
-        #self.element_name = StringVar()
-        #self.element_label = Label(self.element_frame, textvariable=self.element_name, width=30, anchor=W, justify=LEFT)
-        #self.element_label.pack(side=LEFT, anchor=W, fill=X, expand=YES, pady=4)
-        #self.element_value = StringVar()
-        #self.element_entry = Entry(self.element_frame, width=50, textvariable=self.element_value)
-        #self.element_entry.pack(side=LEFT, fill=X, expand=YES, pady=4)
-        #self.default_color = self.element_entry.cget('background')
-
-        #self.element_update = ttk.Button(self.element_frame, text="Update", command=self.on_update_element,
-                                         #state=DISABLED)
-        #self.element_update.pack(side=LEFT, fill=X, expand=YES, pady=4)
-        #self.element_cancel = ttk.Button(self.element_frame, text="Cancel", command=self.on_clear_element,
-                                         #state=DISABLED)
-        #self.element_cancel.pack(side=LEFT, fill=X, expand=YES, pady=4)
-        # end remove ^^^
-
+    
         self.statusLF = LabelFrame(self, text="Status")
         self.statusLF.pack(side=BOTTOM, fill=X, expand=YES, pady=4, padx=6)
         self.statusF = Frame(self.statusLF)
@@ -355,6 +326,10 @@ class SearchApplication(GenericFrame):
             Config().loaded_db.query("DELETE FROM `" + table + "` WHERE `" + Config().parameter['DigiKeyPartNumber'] +
                                      "` = '" + key + "'")
             self.status.set("Part Number '" + key + "' deleted from database")
+            try:
+                self.on_find()
+            except Exception as e:
+                self.status.seterror(e)
 
     # treeview select event
     def fieldChanged(self, event):
@@ -365,11 +340,15 @@ class SearchApplication(GenericFrame):
         else:
             self.copySourcesMenu.entryconfig(self.partnumber_index, state=DISABLED)
             self.copySourcesMenu.entryconfig(self.allParameters_index, state=DISABLED)
+            self.copySourcesMenu.entryconfig(self.selectedParameter_index, state=DISABLED)
+            self.editmenu.entryconfig(self.delete_part_index, state=DISABLED)
             return
         if self.partsTV.parent(selected) == '':
             self.copySourcesMenu.entryconfig(self.selectedParameter_index, state=DISABLED)
+            self.editmenu.entryconfig(self.delete_part_index, state=NORMAL)
         else:
             self.copySourcesMenu.entryconfig(self.selectedParameter_index, state=NORMAL)
+            self.editmenu.entryconfig(self.delete_part_index, state=DISABLED)
         if selected != self.selectedField:
             self.editfield.place_forget()
             self.selectedField = None
