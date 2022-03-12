@@ -2,7 +2,9 @@ import configparser
 import os
 from partdb import *
 from datetime import datetime
-
+import tkinter as tk
+from tkinter import ttk
+from tkinter.messagebox import askyesno
 
 ###############################
 ###   Config File Reading   ###
@@ -186,6 +188,9 @@ class Config:
     def insert_part(self, table, data_dict):
         rv = False
         if not self.loaded_db.table_exists(table):
+            msg = F"Table \"{table}\" does not exist. Click \"Yes\" to create the table or \"No\" to abort. Table \"{table}\" can be mapped to an existing table by adding property to Library section of the assets/map.cfg file."
+            if (not askyesno("New Category", msg)):
+                return None
             self.loaded_db.query("CREATE TABLE `" + table + "` (" + self.parameter['Category'] + " " + self.loaded_db.get_default_datatype() + ")")
             rv = True
         self.loaded_db.add_columns(table, data_dict, self.types)

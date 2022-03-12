@@ -348,10 +348,14 @@ class Application(GenericFrame):
                 self.status.set("Part %s updated in %s", self.loaded_parameters['Supplier Part Number 1'], self.loaded_table) 
             else:
                 newTable = ""
-                if (Config().insert_part(self.loaded_table, self.loaded_parameters)):
-                    newTable = " New Library generated, update Altium"
-                self.status.set("Part %s added to %s%s", self.loaded_parameters['Supplier Part Number 1'], self.loaded_table, newTable) 
-                self.commit_btn["text"] = "Overwrite"
+                rv = Config().insert_part(self.loaded_table, self.loaded_parameters)
+                if (rv is None):
+                    self.status.set("Part %s not saved, Commit Aborted", self.loaded_parameters['Supplier Part Number 1'])
+                else:
+                    if (rv):
+                        newTable = " New Library generated, update Altium"
+                    self.status.set("Part %s added to %s%s", self.loaded_parameters['Supplier Part Number 1'], self.loaded_table, newTable) 
+                    self.commit_btn["text"] = "Overwrite"
         except Exception as e:
             self.handleError("Error while committing entry into Database", e)
 
