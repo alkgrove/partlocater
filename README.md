@@ -13,6 +13,8 @@ Digi-Key has a .net solution if you want a fully windows solution. I've never us
 So for local usage, I recommend XAMPP. XAMPP contains apache, php, cURL and MariaDB and installs on Windows. The reason for this is I wanted to be able to scale it to an intranet server and Apache, MareaDB, PHP, and cURL work on most Linux and Unix OS. So in the doc folder is a description on how to set this up. 
 
 This was intended to work for either single engineer or a small group. It can work from a single workstation or to a local server. 
+ ## v3.0.1
+ Added a dialog box for table creation. Digikey has been changing the categories which I used for table generation. I've got a means to map them to a smaller set of tables in the assets/map.cfg file under the Library section. I added a dialog box if a table is going to be created that asked if you want to create a new table or abort. Aborting means you can copy the Category property that triggered the alert and paste it into the assets/map.cfg file as <Category>=<Your Favorite Table>. Restart partlocator and query digikey for the part again. Committing the part shouldn't trigger the alert. 
  ## v3.0.0 
  Updated to be compatible with Digi-Keys V3 API. V2 and V1 have been suspended and will no longer work. Made changes in the treeview user interface where the right hand cells are edittable and no longer require a separate entry box. 
  ## v1.0.4-beta 
